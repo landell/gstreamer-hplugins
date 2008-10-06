@@ -31,23 +31,23 @@
 #include <linux/videodev.h>
 #include "device.h"
 
-int device_open (char *device_name, int *fd)
+int device_open (V4l2Device *dev)
 {
 	struct stat st;
 
-	if (stat (device_name, &st) == -1)
+	if (stat (dev->name, &st) == -1)
 		return DEVICE_INVALID;
 
 	if (!S_ISCHR (st.st_mode))
 		return DEVICE_INVALID;
 
-	if ((*fd = open (device_name, O_RDWR | O_NONBLOCK, 0)) < 0)
+	if ((dev->fd = open (dev->name, O_RDWR | O_NONBLOCK, 0)) < 0)
 		return DEVICE_INVALID;
 
 	return DEVICE_OK;
 }
 
-int device_init (int fd)
+int device_init (V4l2Device *dev)
 {
 	struct v4l2_capability device_capability;
 	struct v4l2_cropcap device_cropcap;
@@ -55,7 +55,7 @@ int device_init (int fd)
 	struct v4l2_format image_format;
 	unsigned int min;
 
-	if (ioctl (fd, VIDIOC_QUERYCAP, &device_capability) < 0)
+	if (ioctl (dev->fd, VIDIOC_QUERYCAP, &device_capability) < 0)
 		return DEVICE_IS_NOT_V4L2;
 
 	if (!(device_capability.capabilities & V4L2_CAP_VIDEO_CAPTURE))
@@ -66,42 +66,13 @@ int device_init (int fd)
 	//if (!(device_capability.capabilities & V4L2_CAP_READWRITE))
 	//	return DEVICE_MODE_NOT_SUPPORTED;
 
-#if 0
-	CLEAR (device_cropcap);
-
-        device_cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-
-        if (!xioctl (fd, VIDIOC_CROPCAP, &device_cropcap))
-	{
-		device_crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-                device_crop.c = cropcap.defrect; /* reset to default */
-
-		if (xioctl (fd, VIDIOC_S_CROP, &device_crop) == -1)
-		{
-			switch (errno)
-			{
-				case EINVAL:
-                                	/* Cropping not supported. */
-					return DEVICE_FEATURE_NOT_SUPPORTED;
-                                	break;
-                        	default:
-                                	/* Errors ignored. */
-                                	break;
-                        }
-                }
-        } else 
-	{        
-                /* Errors ignored. */
-        }
-#endif
-
 	image_format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	image_format.fmt.pix.width = 640; 
-	image_format.fmt.pix.height = 480;
+	image_format.fmt.pix.width = dev->width; 
+	image_format.fmt.pix.height = dev->height;
 	image_format.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
 	image_format.fmt.pix.field = V4L2_FIELD_ANY;
 
-	if (ioctl (fd, VIDIOC_S_FMT, &image_format) < 0)
+	if (ioctl (dev->fd, VIDIOC_S_FMT, &image_format) < 0)
 		return DEVICE_FORMAT_INVALID;
 
         /* Buggy driver paranoia. */
@@ -120,13 +91,13 @@ int device_init (int fd)
 
 }
 
-int device_getframe (void)
+int device_getframe (V4l2Device *dev)
 {
 	return 0;
 }
 
-int device_close (int fd)
+int device_close (V4l2Device *dev)
 {
-	return close (fd);
+	return close (dev->fd);
 }
 

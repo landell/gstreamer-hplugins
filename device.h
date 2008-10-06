@@ -1,8 +1,6 @@
 #ifndef _H_INTERFACE_
 #define _H_INTERFACE_
 
-#include <stdio.h>
-
 typedef enum {
 	DEVICE_OK = 0,
 	DEVICE_ERROR,
@@ -14,10 +12,17 @@ typedef enum {
 	DEVICE_FORMAT_INVALID
 } DeviceErrors;
 
+typedef struct {
+	int fd;
+	char *name;
+	int width;
+	int height;
+	char *prefix;
+} V4l2Device;
 
-int device_open (char *device_name, int *fd);
-int device_init(int fd);
-int device_getframe(void);
-int device_close(int fd);
+int device_open (V4l2Device *dev);
+int device_init(V4l2Device *dev);
+int device_getframe(V4l2Device *dev);
+int device_close(V4l2Device *dev);
 
 #endif

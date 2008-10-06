@@ -24,7 +24,7 @@
 #include "device.h"
 
 static gboolean list_res;
-static gchar *res_code = "320x480";
+static gchar *res_code = "320x280";
 static gchar *file_prefix = "image";
 static gchar *device_name = "/dev/video0";
 
@@ -41,7 +41,7 @@ gint main (gint argc, gchar *argv[])
 {
 	GError *err = NULL;
 	GOptionContext *context;
-	gint device;
+	V4l2Device device;
 
 	context = g_option_context_new ("- capture JPG image from a V4L2 device.");
 	g_option_context_add_main_entries (context, entries, NULL);
@@ -52,7 +52,12 @@ gint main (gint argc, gchar *argv[])
 		exit (1);
 	}
 
-	device_open (device_name, &device);
-	device_init (device);
-	device_close (device);
+	device.name = device_name;
+	device.width = 320;
+	device.height = 240;
+	device.prefix = file_prefix;	
+
+	device_open (&device);
+	device_init (&device);
+	device_close (&device);
 }
