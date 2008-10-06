@@ -50,8 +50,6 @@ int device_open (V4l2Device *dev)
 int device_init (V4l2Device *dev)
 {
 	struct v4l2_capability device_capability;
-	struct v4l2_cropcap device_cropcap;
-	struct v4l2_crop device_crop;
 	struct v4l2_format image_format;
 	unsigned int min;
 
