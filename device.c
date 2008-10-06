@@ -73,7 +73,7 @@ int device_init (V4l2Device *dev)
 	image_format.fmt.pix.field = V4L2_FIELD_ANY;
 
 	if (ioctl (dev->fd, VIDIOC_S_FMT, &image_format) < 0)
-		return DEVICE_FORMAT_INVALID;
+		return DEVICE_INVALID_FORMAT;
 
         /* Buggy driver paranoia. */
 /*        min = fmt.fmt.pix.width * 2;
@@ -82,18 +82,13 @@ int device_init (V4l2Device *dev)
         min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
         if (fmt.fmt.pix.sizeimage < min)
                 fmt.fmt.pix.sizeimage = min;
-
-        switch (io) {
-        case IO_METHOD_READ:
-                init_read (fmt.fmt.pix.sizeimage);
-                break;
 */
-
+	return DEVICE_OK;
 }
 
 int device_getframe (V4l2Device *dev)
 {
-	return 0;
+	return DEVICE_OK;
 }
 
 int device_close (V4l2Device *dev)
