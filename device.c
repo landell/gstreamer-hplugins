@@ -73,14 +73,18 @@ int device_init (V4l2Device *dev)
 	if (ioctl (dev->fd, VIDIOC_S_FMT, &image_format) < 0)
 		return DEVICE_INVALID_FORMAT;
 
-        /* Buggy driver paranoia. */
-/*        min = fmt.fmt.pix.width * 2;
-        if (fmt.fmt.pix.bytesperline < min)
-                fmt.fmt.pix.bytesperline = min;
-        min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
+	if ((image_format.fmt.pix.width != dev->width) ||
+		(image_format.fmt.pix.height != dev->height)) 
+		return DEVICE_INVALID_FORMAT;
+
+        // Buggy driver paranoia.
+	min = image_format.fmt.pix.width * 2;
+        if (image_format.fmt.pix.bytesperline < min)
+                image_format.fmt.pix.bytesperline = min;
+        min = image_format.fmt.pix.bytesperline * image_format.fmt.pix.height;
         if (fmt.fmt.pix.sizeimage < min)
-                fmt.fmt.pix.sizeimage = min;
-*/
+                image_format.fmt.pix.sizeimage = min;
+
 	return DEVICE_OK;
 }
 
