@@ -75,6 +75,10 @@ gint main (gint argc, gchar *argv[])
 			g_print ("Device %s don't support video capture.\n",
 				device.name); 
 			break;
+		case DEVICE_MODE_NOT_SUPPORTED:
+			g_print ("Device %s don't support MMAP.\n",
+				device.name);
+			break;
 		case DEVICE_INVALID_FORMAT:
 			g_print ("Invalid image format: %s\n",
 				res_code);

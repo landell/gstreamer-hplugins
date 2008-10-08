@@ -59,6 +59,9 @@ int device_init (V4l2Device *dev)
 	if (!(device_capability.capabilities & V4L2_CAP_VIDEO_CAPTURE))
 		return DEVICE_DONT_CAPTURE;
 
+	if (!(device_capability.capabilities & V4L2_CAP_STREAMING))
+		return DEVICE_MODE_NOT_SUPPORTED;
+
 	// TODO: Probe for Read and Write interface, and use it if
 	// available!
 	//if (!(device_capability.capabilities & V4L2_CAP_READWRITE))
