@@ -82,7 +82,7 @@ int device_init (V4l2Device *dev)
         if (image_format.fmt.pix.bytesperline < min)
                 image_format.fmt.pix.bytesperline = min;
         min = image_format.fmt.pix.bytesperline * image_format.fmt.pix.height;
-        if (fmt.fmt.pix.sizeimage < min)
+        if (image_format.fmt.pix.sizeimage < min)
                 image_format.fmt.pix.sizeimage = min;
 
 	return DEVICE_OK;
