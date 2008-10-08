@@ -65,32 +65,43 @@ gint main (gint argc, gchar *argv[])
 	}	
 	
 	ret = device_init (&device);
-	switch (ret)
+	if (ret != DEVICE_OK)
+	{	
+		switch (ret)
+		{
+			case DEVICE_IS_NOT_V4L2:
+				g_print ("Device %s is not a V4l2 device.\n",
+					device.name);
+				break;
+			case DEVICE_DONT_CAPTURE:
+				g_print ("Device %s don't support video capture.\n",
+					device.name); 
+				break;
+			case DEVICE_MODE_NOT_SUPPORTED:
+				g_print ("Device %s don't support MMAP.\n",
+					device.name);
+				break;
+			case DEVICE_INVALID_FORMAT:
+				g_print ("Invalid image format: %s\n",
+					res_code);
+				break;
+			case DEVICE_OUT_OF_MEMORY:
+				g_print ("Out of memory!\n");
+				break;
+			default:
+				g_print ("Unknow or not handled error :(.\n");
+				break;
+		}
+	} else
 	{
-		case DEVICE_IS_NOT_V4L2:
-			g_print ("Device %s is not a V4l2 device.\n",
-				device.name);
-			break;
-		case DEVICE_DONT_CAPTURE:
-			g_print ("Device %s don't support video capture.\n",
-				device.name); 
-			break;
-		case DEVICE_MODE_NOT_SUPPORTED:
-			g_print ("Device %s don't support MMAP.\n",
-				device.name);
-			break;
-		case DEVICE_INVALID_FORMAT:
-			g_print ("Invalid image format: %s\n",
-				res_code);
-			break;
+		//device_getframe (&device);
 	}
-
-//	if (ret == DEVICE_OK)
-//		device_getframe (&device);
 
 	if (device_close (&device) != DEVICE_OK)
 	{
 		g_print ("Closing device error.\n");
 		exit (1);
 	}
+
+	return 0;
 }

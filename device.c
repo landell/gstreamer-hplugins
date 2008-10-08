@@ -20,15 +20,17 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <malloc.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/select.h>
 #include <sys/stat.h>
-#include <linux/videodev.h>
+#include <linux/videodev2.h>
+#include <asm/types.h>
+
 #include "device.h"
 
 int device_open (V4l2Device *dev)
@@ -51,7 +53,9 @@ int device_init (V4l2Device *dev)
 {
 	struct v4l2_capability device_capability;
 	struct v4l2_format image_format;
+	struct v4l2_requestbuffers b_req;
 	unsigned int min;
+	int b;
 
 	if (ioctl (dev->fd, VIDIOC_QUERYCAP, &device_capability) < 0)
 		return DEVICE_IS_NOT_V4L2;
@@ -87,6 +91,48 @@ int device_init (V4l2Device *dev)
         min = image_format.fmt.pix.bytesperline * image_format.fmt.pix.height;
         if (image_format.fmt.pix.sizeimage < min)
                 image_format.fmt.pix.sizeimage = min;
+
+	// Request Buffers for MMAP
+	b_req.count = 4;
+	b_req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	b_req.memory = V4L2_MEMORY_MMAP;
+
+	if (ioctl (dev->fd, VIDIOC_REQBUFS, &b_req) < 0)
+	{
+                if (EINVAL == errno)
+			return DEVICE_MODE_NOT_SUPPORTED;
+		else
+			return DEVICE_ERROR; //?
+	}
+
+	if (b_req.count < 2)
+		return DEVICE_OUT_OF_MEMORY;
+
+        dev->buffer = calloc (b_req.count, sizeof (DeviceBuffer));
+	
+	if (!dev->buffer)
+		return DEVICE_OUT_OF_MEMORY;
+
+	// buffer mapping
+	for (b = 0; b < b_req.count; ++b)
+	{
+		// TODO: remove this "buf" allocation, if useless.
+		struct v4l2_buffer buf;
+
+		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+		buf.memory = V4L2_MEMORY_MMAP;
+		buf.index = b;
+
+		if (ioctl (dev->fd, VIDIOC_QUERYBUF, &buf) < 0)
+			return DEVICE_BUFFER_ERROR;
+
+		dev->buffer[b].length = buf.length;
+		dev->buffer[b].start = mmap (NULL, buf.length,
+			PROT_READ | PROT_WRITE,	MAP_SHARED, dev->fd, buf.m.offset);
+
+		if (dev->buffer[b].start == MAP_FAILED)
+			return DEVICE_BUFFER_ERROR;
+        }
 
 	return DEVICE_OK;
 }

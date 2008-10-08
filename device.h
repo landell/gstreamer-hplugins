@@ -9,8 +9,15 @@ typedef enum {
 	DEVICE_DONT_CAPTURE,
 	DEVICE_MODE_NOT_SUPPORTED,
 	DEVICE_FEATURE_NOT_SUPPORTED,
-	DEVICE_INVALID_FORMAT
+	DEVICE_INVALID_FORMAT,
+	DEVICE_OUT_OF_MEMORY,
+	DEVICE_BUFFER_ERROR
 } DeviceErrors;
+
+typedef struct {
+	void *start;
+	size_t length;
+} DeviceBuffer;
 
 typedef struct {
 	int fd;
@@ -18,6 +25,8 @@ typedef struct {
 	int width;
 	int height;
 	char *prefix;
+	DeviceBuffer *buffer;
+	int n_buffers;
 } V4l2Device;
 
 int device_open (V4l2Device *dev);
