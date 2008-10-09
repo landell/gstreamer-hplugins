@@ -116,7 +116,8 @@ int device_init (V4l2Device *dev)
 		return DEVICE_OUT_OF_MEMORY;
 
 	// buffer mapping
-	for (b = 0; b < b_req.count; ++b)
+	dev->n_buffers = b_req.count;
+	for (b = 0; b < dev->n_buffers; ++b)
 	{
 		// TODO: remove this "buf" allocation, if useless.
 		struct v4l2_buffer buf;
@@ -142,6 +143,25 @@ int device_init (V4l2Device *dev)
 int device_start_capture (V4l2Device *dev)
 {
 	// TODO: Teste if capture is running.
+	unsigned int i;
+	enum v4l2_buf_type type;
+
+	for (i = 0; i < dev->n_buffers; ++i)
+	{
+		struct v4l2_buffer buf;
+
+		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+		buf.memory = V4L2_MEMORY_MMAP;
+		buf.index = i;
+
+		if (ioctl (dev->fd, VIDIOC_QBUF, &buf) < 0)
+                	return DEVICE_BUFFER_ERROR;
+	}
+
+	type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+	if (ioctl (dev->fd, VIDIOC_STREAMON, &type) < 0)
+		return DEVICE_STREAM_ERROR;
 
 	return DEVICE_OK;
 }
@@ -153,6 +173,13 @@ int device_getframe (V4l2Device *dev)
 
 int device_stop_capture (V4l2Device *dev)
 {
+	enum v4l2_buf_type type;
+
+	type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+	if (ioctl (dev->fd, VIDIOC_STREAMOFF, &type) < 0)
+		return DEVICE_STREAM_ERROR;
+
 	return DEVICE_OK;
 }
 
