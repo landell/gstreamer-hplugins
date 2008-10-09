@@ -94,25 +94,29 @@ gint main (gint argc, gchar *argv[])
 		}
 	} else
 	{
-		if ((ret = device_start_capture (&device)) ==
-			DEVICE_BUFFER_ERROR)
-			g_print ("Could not start the stream.\n");
+		ret = device_start_capture (&device);
 		
-		if (ret == DEVICE_STREAM_ERROR)
-			g_print ("Error on start streaming.\n");
-		else
-		{			
+		switch (ret)
+		{
+			case DEVICE_BUFFER_ERROR:
+				g_print ("Could not start the stream.\n");
+				break;
+			case DEVICE_STREAM_ERROR:
+				g_print ("Error on start streaming.\n");
+				break;
+		} 
+		
+		if (ret == DEVICE_OK)
+		{		
 			g_print ("Taking a picture...\n");
 
+			// TODO: Prevent this to get in infinite loop.
 			do
 				ret = device_getframe (&device);
 			while (ret == DEVICE_NOT_READY);
 
 			switch (ret)
 			{
-				case DEVICE_OK:
-					g_print ("Done!\n");
-					break;
 				case DEVICE_STREAM_ERROR:
 					g_print ("STREAM ERROR\n");
 					break;
@@ -120,7 +124,15 @@ gint main (gint argc, gchar *argv[])
 					g_print ("BUFFER ERROR\n");
 					break;
 			}
+			
+			if (ret == DEVICE_OK)
+			{
+				// Now we got a pic. It must be adjusted
+				// and sent to a file.
+				g_print ("Done!\n");
+			}
 		}
+
 		if (device_stop_capture (&device) != DEVICE_OK)
 			g_print ("Error on stop streaming.\n");
 	}
