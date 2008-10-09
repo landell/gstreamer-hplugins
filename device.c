@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <malloc.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/select.h>
@@ -45,6 +46,12 @@ int device_open (V4l2Device *dev)
 
 	if ((dev->fd = open (dev->name, O_RDWR | O_NONBLOCK, 0)) < 0)
 		return DEVICE_INVALID;
+
+	dev->buffersize = dev->width * dev->height * 2;
+	dev->framebuffer = (unsigned char *) calloc(1,
+		(size_t) dev->buffersize);
+
+	// TODO: Test allocated buffer.
 
 	return DEVICE_OK;
 }
@@ -188,6 +195,10 @@ int device_getframe (V4l2Device *dev)
 				return DEVICE_STREAM_ERROR;
 		}
 	}
+
+	memcpy (dev->framebuffer, dev->buffer[buf.index].start,
+		buf.bytesused);
+	dev->buffersize = buf.bytesused;
 
 	if (ioctl (dev->fd, VIDIOC_QBUF, &buf) < 0)
 		return DEVICE_BUFFER_ERROR;

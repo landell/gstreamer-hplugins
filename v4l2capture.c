@@ -21,7 +21,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <glib.h>
+#include <string.h>
+#include <time.h>
 #include "device.h"
+#include "huffman.h"
 
 static gboolean list_res;
 static gchar *res_code = "320x280";
@@ -36,6 +39,72 @@ static GOptionEntry entries[] =
 	{ "device", 'd', 0, G_OPTION_ARG_FILENAME, &device_name, "V4L2 device", "/dev/videox" },
 	{ NULL }
 };
+
+/* JPEG Utils */
+
+int is_huffman (unsigned char *buf)
+{
+	unsigned char *ptbuf;
+	int i = 0;
+	ptbuf = buf;
+	while (((ptbuf[0] << 8) | ptbuf[1]) != 0xffda)
+	{
+		if (i++ > 2048)
+			return 0;
+		if (((ptbuf[0] << 8) | ptbuf[1]) == 0xffc4)
+			return 1;
+		ptbuf++;
+	}
+	return 0;
+}
+
+static void get_picture_name (char *Picture, int fmt)
+{
+	char temp[80];
+	char *myext[] = { "pnm", "jpg" };
+	int i;
+	time_t curdate;
+	struct tm *tdate;
+	memset (temp, '\0', sizeof (temp));
+	time (&curdate);
+	tdate = localtime (&curdate);
+	snprintf (temp, 26, "P-%02d:%02d:%04d-%02d:%02d:%02d.%s\0",
+	tdate->tm_mon + 1, tdate->tm_mday, tdate->tm_year + 1900,
+	tdate->tm_hour, tdate->tm_min, tdate->tm_sec, myext[fmt]);
+	memcpy (Picture, temp, strlen (temp));
+}
+
+static int save_picture (unsigned char *buf, int size)
+{
+	FILE *file;
+	unsigned char *ptdeb, *ptcur = buf;
+	int sizein;
+	char *name = NULL;
+	name = calloc(80,1);
+	get_picture_name (name, 1);
+	file = fopen(name, "wb");
+	if (file != NULL)
+	{
+		if (!is_huffman (buf))
+		{
+			ptdeb = ptcur = buf;
+			while (((ptcur[0] << 8) | ptcur[1]) != 0xffc0)
+				ptcur++;
+			sizein = ptcur-ptdeb;
+			fwrite (buf, sizein, 1, file);
+			fwrite (dht_data, DHT_SIZE, 1, file);
+			fwrite (ptcur,size-sizein, 1, file);
+		} else {
+			fwrite (ptcur, size, 1, file);
+		}
+		fclose (file);
+        }
+	if (name)
+		free (name);
+	return 0;
+}
+
+/******/
 
 gint main (gint argc, gchar *argv[])
 {
@@ -129,6 +198,8 @@ gint main (gint argc, gchar *argv[])
 			{
 				// Now we got a pic. It must be adjusted
 				// and sent to a file.
+				save_picture (device.framebuffer,
+					device.buffersize);
 				g_print ("Done!\n");
 			}
 		}

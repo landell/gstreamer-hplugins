@@ -29,6 +29,8 @@ typedef struct {
 	char *prefix;
 	DeviceBuffer *buffer;
 	int n_buffers;
+	int buffersize;
+	unsigned char *framebuffer;
 } V4l2Device;
 
 int device_open (V4l2Device *dev);
