@@ -168,6 +168,30 @@ int device_start_capture (V4l2Device *dev)
 
 int device_getframe (V4l2Device *dev)
 {
+	struct v4l2_buffer buf;
+	unsigned int i;
+
+	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	buf.memory = V4L2_MEMORY_MMAP;
+
+	if (ioctl (dev->fd, VIDIOC_DQBUF, &buf) < 0) 
+	{
+		switch (errno)
+		{
+			case EAGAIN:
+				return DEVICE_NOT_READY;
+
+			case EIO:
+				/* Could ignore EIO, see spec. */
+				/* fall through */
+			default:
+				return DEVICE_STREAM_ERROR;
+		}
+	}
+
+	if (ioctl (dev->fd, VIDIOC_QBUF, &buf) < 0)
+		return DEVICE_BUFFER_ERROR;
+
 	return DEVICE_OK;
 }
 

@@ -54,8 +54,8 @@ gint main (gint argc, gchar *argv[])
 	}
 
 	device.name = device_name;
-	device.width = 320;
-	device.height = 240;
+	device.width = 640;
+	device.height = 480;
 	device.prefix = file_prefix;	
 
 	if (device_open (&device) != DEVICE_OK)
@@ -99,11 +99,30 @@ gint main (gint argc, gchar *argv[])
 			g_print ("Could not start the stream.\n");
 		
 		if (ret == DEVICE_STREAM_ERROR)
-			g_print ("Error on start streaming.");
-		//else
-			//device_getframe (&device);
+			g_print ("Error on start streaming.\n");
+		else
+		{			
+			g_print ("Taking a picture...\n");
+
+			do
+				ret = device_getframe (&device);
+			while (ret == DEVICE_NOT_READY);
+
+			switch (ret)
+			{
+				case DEVICE_OK:
+					g_print ("Done!\n");
+					break;
+				case DEVICE_STREAM_ERROR:
+					g_print ("STREAM ERROR\n");
+					break;
+				case DEVICE_BUFFER_ERROR:
+					g_print ("BUFFER ERROR\n");
+					break;
+			}
+		}
 		if (device_stop_capture (&device) != DEVICE_OK)
-			g_print ("Error on stop streaming.");
+			g_print ("Error on stop streaming.\n");
 	}
 
 	if (device_close (&device) != DEVICE_OK)
