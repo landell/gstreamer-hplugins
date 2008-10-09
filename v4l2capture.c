@@ -94,7 +94,16 @@ gint main (gint argc, gchar *argv[])
 		}
 	} else
 	{
-		//device_getframe (&device);
+		if ((ret = device_start_capture (&device)) ==
+			DEVICE_BUFFER_ERROR)
+			g_print ("Could not start the stream.\n");
+		
+		if (ret == DEVICE_STREAM_ERROR)
+			g_print ("Error on start streaming.");
+		//else
+			//device_getframe (&device);
+		if (device_stop_capture (&device) != DEVICE_OK)
+			g_print ("Error on stop streaming.");
 	}
 
 	if (device_close (&device) != DEVICE_OK)
