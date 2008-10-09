@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <string.h>
-#include <time.h>
 #include "device.h"
 #include "huffman.h"
 
@@ -61,16 +60,8 @@ int is_huffman (unsigned char *buf)
 static void get_picture_name (char *Picture, int fmt)
 {
 	char temp[80];
-	char *myext[] = { "pnm", "jpg" };
-	int i;
-	time_t curdate;
-	struct tm *tdate;
 	memset (temp, '\0', sizeof (temp));
-	time (&curdate);
-	tdate = localtime (&curdate);
-	snprintf (temp, 26, "P-%02d:%02d:%04d-%02d:%02d:%02d.%s\0",
-	tdate->tm_mon + 1, tdate->tm_mday, tdate->tm_year + 1900,
-	tdate->tm_hour, tdate->tm_min, tdate->tm_sec, myext[fmt]);
+	snprintf (temp, 26, "image.jpg");
 	memcpy (Picture, temp, strlen (temp));
 }
 
@@ -94,7 +85,8 @@ static int save_picture (unsigned char *buf, int size)
 			fwrite (buf, sizein, 1, file);
 			fwrite (dht_data, DHT_SIZE, 1, file);
 			fwrite (ptcur,size-sizein, 1, file);
-		} else {
+		} else
+		{
 			fwrite (ptcur, size, 1, file);
 		}
 		fclose (file);
