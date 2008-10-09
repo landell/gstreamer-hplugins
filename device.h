@@ -30,8 +30,10 @@ typedef struct {
 } V4l2Device;
 
 int device_open (V4l2Device *dev);
-int device_init(V4l2Device *dev);
-int device_getframe(V4l2Device *dev);
-int device_close(V4l2Device *dev);
+int device_init (V4l2Device *dev);
+int device_start_capture (V4l2Device *dev);
+int device_stop_capture (V4l2Device *dev);
+int device_getframe (V4l2Device *dev);
+int device_close (V4l2Device *dev);
 
 #endif

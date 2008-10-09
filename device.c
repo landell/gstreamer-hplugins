@@ -57,6 +57,8 @@ int device_init (V4l2Device *dev)
 	unsigned int min;
 	int b;
 
+	// TODO: Test if device is already initialized.
+
 	if (ioctl (dev->fd, VIDIOC_QUERYCAP, &device_capability) < 0)
 		return DEVICE_IS_NOT_V4L2;
 
@@ -137,13 +139,27 @@ int device_init (V4l2Device *dev)
 	return DEVICE_OK;
 }
 
+int device_start_capture (V4l2Device *dev)
+{
+	// TODO: Teste if capture is running.
+
+	return DEVICE_OK;
+}
+
 int device_getframe (V4l2Device *dev)
+{
+	return DEVICE_OK;
+}
+
+int device_stop_capture (V4l2Device *dev)
 {
 	return DEVICE_OK;
 }
 
 int device_close (V4l2Device *dev)
 {
+	// TODO: Free allocated buffers before close device.
+
 	return close (dev->fd);
 }
 
