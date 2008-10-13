@@ -26,7 +26,7 @@
 #include "huffman.h"
 
 static gboolean list_res;
-static gchar *res_code = "320x280";
+static gchar *res_code = "320x240";
 static gchar *file_prefix = "image";
 static gchar *device_name = "/dev/video0";
 
@@ -96,6 +96,32 @@ static int save_picture (unsigned char *buf, int size)
 	return 0;
 }
 
+static int get_resolution (char *res, int *w, int *h)
+{
+	#define B_SIZE	6
+	char w_buf[B_SIZE], h_buf[B_SIZE], *aux;
+	int index, i;
+
+	memset (w_buf, '\0', B_SIZE);
+	memset (h_buf, '\0', B_SIZE);
+
+	aux = strchr (res, 'x');
+
+	if (aux == NULL)
+		return 1;
+
+	strncpy (w_buf, res, (aux - res));
+	strcpy (h_buf, (aux + 1));
+
+	*w = atoi (w_buf);
+	*h = atoi (h_buf);
+
+	if ((*w == 0) || (*h == 0))
+		return 1;
+
+	return 0;
+}
+
 /******/
 
 gint main (gint argc, gchar *argv[])
@@ -118,6 +144,16 @@ gint main (gint argc, gchar *argv[])
 	device.width = 640;
 	device.height = 480;
 	device.prefix = file_prefix;	
+
+	if (get_resolution (res_code, &device.width, &device.height))
+	{
+		g_print ("Incorrect image format input: %s\n",
+			res_code);
+		exit (1);
+	}
+
+	g_print ("Image resolution: %dx%d\n", device.width,
+		device.height);
 
 	if (device_open (&device) != DEVICE_OK)
 	{
