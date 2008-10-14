@@ -64,6 +64,11 @@ int device_init (V4l2Device *dev)
 	unsigned int min;
 	int b;
 
+	memset (&device_capability, 0, sizeof(struct v4l2_capability));
+	memset (&image_format, 0, sizeof(struct v4l2_format));
+	memset (&b_req, 0, sizeof(struct v4l2_requestbuffers));
+	memset (&setfps, 0, sizeof(struct v4l2_streamparm));
+
 	// TODO: Test if device is already initialized.
 
 	if (ioctl (dev->fd, VIDIOC_QUERYCAP, &device_capability) < 0)
@@ -134,6 +139,7 @@ int device_init (V4l2Device *dev)
 	{
 		// TODO: remove this "buf" allocation, if useless.
 		struct v4l2_buffer buf;
+		memset (&buf, 0, sizeof(struct v4l2_buffer));
 
 		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		buf.memory = V4L2_MEMORY_MMAP;
@@ -162,6 +168,7 @@ int device_start_capture (V4l2Device *dev)
 	for (i = 0; i < dev->n_buffers; ++i)
 	{
 		struct v4l2_buffer buf;
+		memset (&buf, 0, sizeof(struct v4l2_buffer));
 
 		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		buf.memory = V4L2_MEMORY_MMAP;
@@ -183,6 +190,8 @@ int device_getframe (V4l2Device *dev)
 {
 	struct v4l2_buffer buf;
 	unsigned int i;
+
+	memset (&buf, 0, sizeof(struct v4l2_buffer));
 
 	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	buf.memory = V4L2_MEMORY_MMAP;
