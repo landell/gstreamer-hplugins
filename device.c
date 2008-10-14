@@ -196,6 +196,9 @@ int device_getframe (V4l2Device *dev)
 		}
 	}
 
+	if (buf.index >= dev->n_buffers)
+		return DEVICE_BUFFER_ERROR;
+
 	memcpy (dev->framebuffer, dev->buffer[buf.index].start,
 		buf.bytesused);
 	dev->buffersize = buf.bytesused;
