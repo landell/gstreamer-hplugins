@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with v4l2capture.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2008 Samuel R. C. Vale
     srcvale@holoscopio.com
@@ -20,24 +20,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <glib.h>
 #include <string.h>
+#include <unistd.h>
 #include "device.h"
 #include "huffman.h"
 
-static gboolean list_res;
-static gchar *res_code = "320x240";
-static gchar *file_prefix = "image";
-static gchar *device_name = "/dev/video0";
-
-static GOptionEntry entries[] = 
-{
-	{ "list-res", 'l', 0, G_OPTION_ARG_NONE, &list_res, "List available resolutions", NULL},
-	{ "res", 'r', 0, G_OPTION_ARG_STRING, &res_code, "Image resolution", "{320x240 | 640x480}"},
-	{ "output", 'o', 0, G_OPTION_ARG_STRING, &file_prefix, "Filename prefix", "PREFIX" },
-	{ "device", 'd', 0, G_OPTION_ARG_FILENAME, &device_name, "V4L2 device", "/dev/videox" },
-	{ NULL }
-};
+static int list_res;
+static char *res_code = "320x240";
+static char *file_prefix = "image";
+static char *device_name = "/dev/video0";
 
 /* JPEG Utils */
 
@@ -124,20 +115,39 @@ static int get_resolution (char *res, int *w, int *h)
 
 /******/
 
-gint main (gint argc, gchar *argv[])
+static void usage ()
 {
-	GError *err = NULL;
-	GOptionContext *context;
-	V4l2Device device;
-	gint ret;
+  fprintf (stderr, "v4l2capture [-l] [-r resolution] [-o output_prefix]"
+		" [-d device_name]\n");
+}
 
-	context = g_option_context_new ("- capture JPG image from a V4L2 device.");
-	g_option_context_add_main_entries (context, entries, NULL);
-	
-	if (!g_option_context_parse (context, &argc, &argv, &err))
+int main (int argc, char **argv)
+{
+	V4l2Device device;
+	int ret;
+	int c;
+
+	while ((c = getopt (argc, argv, "lr:o:d:")) != -1)
 	{
-     		g_print ("Option parsing failed: %s\n", err->message);
-		exit (1);
+		switch (c)
+		{
+			case 'l':
+				list_res = 1;
+				break;
+			case 'r':
+				res_code = strdup (optarg);
+				break;
+			case 'o':
+				file_prefix = strdup (optarg);
+				break;
+			case 'd':
+				device_name = strdup (optarg);
+				break;
+			case '?':
+			default:
+				usage ();
+				exit (1);
+		}
 	}
 
 	device.name = device_name;
@@ -147,17 +157,17 @@ gint main (gint argc, gchar *argv[])
 
 	if (get_resolution (res_code, &device.width, &device.height))
 	{
-		g_print ("Incorrect image format input: %s\n",
+		fprintf (stderr, "Incorrect image format input: %s\n",
 			res_code);
 		exit (1);
 	}
 
-	g_print ("Image resolution: %dx%d\n", device.width,
+	fprintf (stderr, "Image resolution: %dx%d\n", device.width,
 		device.height);
 
 	if (device_open (&device) != DEVICE_OK)
 	{
-		g_print ("Invalid Device: %s\n", device.name);
+		fprintf (stderr, "Invalid Device: %s\n", device.name);
 		exit (1);	
 	}	
 	
@@ -167,26 +177,30 @@ gint main (gint argc, gchar *argv[])
 		switch (ret)
 		{
 			case DEVICE_IS_NOT_V4L2:
-				g_print ("Device %s is not a V4l2 device.\n",
+				fprintf (stderr,
+					"Device %s is not a V4l2 device.\n",
 					device.name);
 				break;
 			case DEVICE_DONT_CAPTURE:
-				g_print ("Device %s don't support video capture.\n",
+				fprintf (stderr,
+					"Device %s don't support video capture.\n",
 					device.name); 
 				break;
 			case DEVICE_MODE_NOT_SUPPORTED:
-				g_print ("Device %s don't support MMAP.\n",
+				fprintf (stderr,
+					"Device %s don't support MMAP.\n",
 					device.name);
 				break;
 			case DEVICE_INVALID_FORMAT:
-				g_print ("Invalid image format: %s\n",
+				fprintf (stderr, "Invalid image format: %s\n",
 					res_code);
 				break;
 			case DEVICE_OUT_OF_MEMORY:
-				g_print ("Out of memory!\n");
+				fprintf (stderr, "Out of memory!\n");
 				break;
 			default:
-				g_print ("Unknow or not handled error :(.\n");
+				fprintf (stderr,
+					"Unknow or not handled error :(.\n");
 				break;
 		}
 	} else
@@ -196,16 +210,18 @@ gint main (gint argc, gchar *argv[])
 		switch (ret)
 		{
 			case DEVICE_BUFFER_ERROR:
-				g_print ("Could not start the stream.\n");
+				fprintf (stderr,
+					"Could not start the stream.\n");
 				break;
 			case DEVICE_STREAM_ERROR:
-				g_print ("Error on start streaming.\n");
+				fprintf (stderr,
+					"Error on start streaming.\n");
 				break;
 		} 
 		
 		if (ret == DEVICE_OK)
 		{		
-			g_print ("Taking a picture...\n");
+			fprintf (stderr, "Taking a picture...\n");
 
 			// TODO: Prevent this to get in infinite loop.
 			do
@@ -215,10 +231,10 @@ gint main (gint argc, gchar *argv[])
 			switch (ret)
 			{
 				case DEVICE_STREAM_ERROR:
-					g_print ("STREAM ERROR\n");
+					fprintf (stderr, "STREAM ERROR\n");
 					break;
 				case DEVICE_BUFFER_ERROR:
-					g_print ("BUFFER ERROR\n");
+					fprintf (stderr, "BUFFER ERROR\n");
 					break;
 			}
 			
@@ -228,17 +244,17 @@ gint main (gint argc, gchar *argv[])
 				// and sent to a file.
 				save_picture (device.framebuffer,
 					device.buffersize);
-				g_print ("Done!\n");
+				fprintf (stderr, "Done!\n");
 			}
 		}
 
 		if (device_stop_capture (&device) != DEVICE_OK)
-			g_print ("Error on stop streaming.\n");
+			fprintf (stderr, "Error on stop streaming.\n");
 	}
 
 	if (device_close (&device) != DEVICE_OK)
 	{
-		g_print ("Closing device error.\n");
+		fprintf (stderr, "Closing device error.\n");
 		exit (1);
 	}
 

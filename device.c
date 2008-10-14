@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with v4l2capture.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2008 Samuel R. C. Vale
     srcvale@holoscopio.com
@@ -23,7 +23,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include <malloc.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
