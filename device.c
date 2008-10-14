@@ -60,6 +60,7 @@ int device_init (V4l2Device *dev)
 	struct v4l2_capability device_capability;
 	struct v4l2_format image_format;
 	struct v4l2_requestbuffers b_req;
+	struct v4l2_streamparm setfps;
 	unsigned int min;
 	int b;
 
@@ -99,6 +100,12 @@ int device_init (V4l2Device *dev)
         min = image_format.fmt.pix.bytesperline * image_format.fmt.pix.height;
         if (image_format.fmt.pix.sizeimage < min)
                 image_format.fmt.pix.sizeimage = min;
+
+	// Framerate
+	setfps.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	setfps.parm.capture.timeperframe.numerator = 1;
+	setfps.parm.capture.timeperframe.denominator = 10;
+	ioctl(dev->fd, VIDIOC_S_PARM, &setfps);
 
 	// Request Buffers for MMAP
 	b_req.count = 4;
