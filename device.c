@@ -37,6 +37,9 @@ int device_open (V4l2Device *dev)
 {
 	struct stat st;
 
+	dev->buffer = NULL;
+	dev->framebuffer = NULL;
+
 	if (stat (dev->name, &st) == -1)
 		return DEVICE_INVALID;
 
@@ -240,8 +243,10 @@ int device_close (V4l2Device *dev)
 {
 	// TODO: Free allocated buffers before close device.
 
-	free (dev->framebuffer);
-	free (dev->buffer);
+	if (dev->framebuffer)
+		free (dev->framebuffer);
+	if (dev->buffer)
+		free (dev->buffer);
 
 	return close (dev->fd);
 }
