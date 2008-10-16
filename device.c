@@ -240,6 +240,9 @@ int device_close (V4l2Device *dev)
 {
 	// TODO: Free allocated buffers before close device.
 
+	free (dev->framebuffer);
+	free (dev->buffer);
+
 	return close (dev->fd);
 }
 
