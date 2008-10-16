@@ -246,8 +246,14 @@ int device_close (V4l2Device *dev)
 	if (dev->framebuffer)
 		free (dev->framebuffer);
 	if (dev->buffer)
+	{
+		int i;
+		for (i = 0; i < dev->n_buffers; ++i)
+			if (munmap (dev->buffer[i].start,
+				dev->buffer[i].length) < 0)
+				break;
 		free (dev->buffer);
-
+	}
 	return close (dev->fd);
 }
 
