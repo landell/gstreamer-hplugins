@@ -224,6 +224,8 @@ int main (int argc, char **argv)
 			fprintf (stderr, "Taking a picture...\n");
 
 			// TODO: Prevent this to get in infinite loop.
+			int i;
+			for (i=0; i < 2; ++i)
 			do
 				ret = device_getframe (&device);
 			while (ret == DEVICE_NOT_READY);
