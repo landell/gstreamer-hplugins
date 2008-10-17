@@ -32,7 +32,7 @@ static char *device_name = "/dev/video0";
 
 /* JPEG Utils */
 
-int is_huffman (unsigned char *buf)
+int is_huffman (unsigned char *buf, int size)
 {
 	unsigned char *ptbuf;
 	int i = 0;
@@ -43,6 +43,8 @@ int is_huffman (unsigned char *buf)
 			return 0;
 		if (((ptbuf[0] << 8) | ptbuf[1]) == 0xffc4)
 			return 1;
+		if (ptbuf == (buf + size - 2))
+			return 0;
 		ptbuf++;
 	}
 	return 0;
@@ -67,11 +69,23 @@ static int save_picture (unsigned char *buf, int size)
 	file = fopen(name, "wb");
 	if (file != NULL)
 	{
-		if (!is_huffman (buf))
+		if (!is_huffman (buf, size))
 		{
 			ptdeb = ptcur = buf;
 			while (((ptcur[0] << 8) | ptcur[1]) != 0xffc0)
-				ptcur++;
+			{
+				if (ptcur < (buf + size - 2))
+				{
+					ptcur++;
+				} else
+				{
+					// corrupted file
+					if (name)
+						free (name);
+					fclose (file);
+					return 1;
+				}
+			}
 			sizein = ptcur-ptdeb;
 			fwrite (buf, sizein, 1, file);
 			fwrite (dht_data, DHT_SIZE, 1, file);
@@ -91,7 +105,6 @@ static int get_resolution (char *res, int *w, int *h)
 {
 	#define B_SIZE	6
 	char w_buf[B_SIZE], h_buf[B_SIZE], *aux;
-	int index, i;
 
 	memset (w_buf, '\0', B_SIZE);
 	memset (h_buf, '\0', B_SIZE);

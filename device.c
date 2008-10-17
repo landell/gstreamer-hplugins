@@ -192,7 +192,6 @@ int device_start_capture (V4l2Device *dev)
 int device_getframe (V4l2Device *dev)
 {
 	struct v4l2_buffer buf;
-	unsigned int i;
 
 	memset (&buf, 0, sizeof(struct v4l2_buffer));
 
