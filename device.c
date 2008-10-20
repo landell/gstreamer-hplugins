@@ -251,9 +251,9 @@ int device_close (V4l2Device *dev)
 	{
 		int i;
 		for (i = 0; i < dev->n_buffers; ++i)
-			if (munmap (dev->buffer[i].start,
-				dev->buffer[i].length) < 0)
-				break;
+			if (dev->buffer[i].start)
+				munmap (dev->buffer[i].start,
+				dev->buffer[i].length);
 		free (dev->buffer);
 	}
 	return close (dev->fd);
