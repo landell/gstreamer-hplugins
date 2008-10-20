@@ -33,6 +33,9 @@
 
 #include "device.h"
 
+#define MAX_BUFFERS 20
+#define MIN_BUFFERS 5
+
 int device_open (V4l2Device *dev)
 {
 	struct stat st;
@@ -116,7 +119,7 @@ int device_init (V4l2Device *dev)
 	ioctl(dev->fd, VIDIOC_S_PARM, &setfps);
 
 	// Request Buffers for MMAP
-	b_req.count = 4;
+	b_req.count = MAX_BUFFERS;
 	b_req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	b_req.memory = V4L2_MEMORY_MMAP;
 
@@ -128,7 +131,7 @@ int device_init (V4l2Device *dev)
 			return DEVICE_ERROR; //?
 	}
 
-	if (b_req.count < 2)
+	if (b_req.count < MIN_BUFFERS)
 		return DEVICE_OUT_OF_MEMORY;
 
         dev->buffer = calloc (b_req.count, sizeof (DeviceBuffer));
