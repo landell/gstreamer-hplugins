@@ -1,5 +1,16 @@
+GCC = gcc
+CROSS_COMPILE ?=
+CFLAGS ?= -g -Wall
+CC := $(CROSS_COMPILE)$(GCC) $(CFLAGS)
+OBJECTS = v4l2capture.o device.o
 
-all:
-	gcc -g -Wall -o v4l2capture v4l2capture.c device.c
+all: v4l2capture
+
+.c.o:
+	$(CC) -c -o $@ $<
+
+v4l2capture: $(OBJECTS)
+	$(CC) -o v4l2capture $(OBJECTS)
+
 clean:
-	rm -f v4l2capture *.o
+	rm -f v4l2capture $(OBJECTS)
