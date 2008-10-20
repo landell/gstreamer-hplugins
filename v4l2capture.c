@@ -53,46 +53,63 @@ int is_huffman (unsigned char *buf, int size)
 static int save_picture (unsigned char *buf, int size)
 {
 	#define NAME_SIZE 80
+	#define MIN_SIZE 128
 	FILE *file;
-	unsigned char *ptdeb, *ptcur = buf;
+	unsigned char *ps, *pc;
 	int sizein;
 	char *name = NULL;
 
 	name = calloc(NAME_SIZE, 1);
+	if (!name)
+		return 1;
 	snprintf (name, NAME_SIZE, "%s.jpg", file_prefix);
 	file = fopen (name, "wb");
 
 	if (file != NULL)
 	{
-		if (!is_huffman (buf, size))
+		// look for JPEG start
+		ps = buf;
+		while (((ps[0] << 8 | ps[1]) != 0xffd8) && 
+			(ps < (buf + size - MIN_SIZE)))
+			ps++;
+
+		if (ps >= buf + size - MIN_SIZE)
 		{
-			ptdeb = ptcur = buf;
-			while (((ptcur[0] << 8) | ptcur[1]) != 0xffc0)
+			fclose (file);
+			free (name);
+			return 1;
+		}
+
+		size -= ps - buf;
+		pc = ps;
+
+		if (!is_huffman (ps, size))
+		{
+			while (((pc[0] << 8) | pc[1]) != 0xffc0)
 			{
-				if (ptcur < (buf + size - 2))
+				if (pc < (ps + size - 2))
 				{
-					ptcur++;
+					pc++;
 				} else
 				{
 					// corrupted file
-					if (name)
-						free (name);
 					fclose (file);
+					free (name);
 					return 1;
 				}
 			}
-			sizein = ptcur-ptdeb;
-			fwrite (buf, sizein, 1, file);
+			sizein = pc - ps;
+			fwrite (ps, sizein, 1, file);
 			fwrite (dht_data, DHT_SIZE, 1, file);
-			fwrite (ptcur,size-sizein, 1, file);
+			fwrite (pc, size - sizein, 1, file);
 		} else
 		{
-			fwrite (ptcur, size, 1, file);
+			fwrite (pc, size, 1, file);
 		}
 		fclose (file);
         }
-	if (name)
-		free (name);
+
+	free (name);
 	return 0;
 }
 
