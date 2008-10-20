@@ -50,23 +50,18 @@ int is_huffman (unsigned char *buf, int size)
 	return 0;
 }
 
-static void get_picture_name (char *Picture, int fmt)
-{
-	char temp[80];
-	memset (temp, '\0', sizeof (temp));
-	snprintf (temp, 26, "image.jpg");
-	memcpy (Picture, temp, strlen (temp));
-}
-
 static int save_picture (unsigned char *buf, int size)
 {
+	#define NAME_SIZE 80
 	FILE *file;
 	unsigned char *ptdeb, *ptcur = buf;
 	int sizein;
 	char *name = NULL;
-	name = calloc(80,1);
-	get_picture_name (name, 1);
-	file = fopen(name, "wb");
+
+	name = calloc(NAME_SIZE, 1);
+	snprintf (name, NAME_SIZE, "%s.jpg", file_prefix);
+	file = fopen (name, "wb");
+
 	if (file != NULL)
 	{
 		if (!is_huffman (buf, size))
