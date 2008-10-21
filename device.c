@@ -113,9 +113,12 @@ int device_init (V4l2Device *dev)
                 image_format.fmt.pix.sizeimage = min;
 
 	// Framerate
+	if ((dev->fps < 1) || (dev->fps > 30))
+		dev->fps = 15;
+
 	setfps.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	setfps.parm.capture.timeperframe.numerator = 1;
-	setfps.parm.capture.timeperframe.denominator = 10;
+	setfps.parm.capture.timeperframe.denominator = dev->fps;
 	ioctl(dev->fd, VIDIOC_S_PARM, &setfps);
 
 	// Request Buffers for MMAP

@@ -30,6 +30,8 @@ static char *res_code = "320x240";
 static char *file_prefix = "image";
 static char *device_name = "/dev/video0";
 
+#define DEFAULT_FPS 20
+
 /* JPEG Utils */
 
 int is_huffman (unsigned char *buf, int size)
@@ -178,7 +180,8 @@ int main (int argc, char **argv)
 	device.name = device_name;
 	device.width = 640;
 	device.height = 480;
-	device.prefix = file_prefix;	
+	device.prefix = file_prefix;
+	device.fps = DEFAULT_FPS;
 
 	if (get_resolution (res_code, &device.width, &device.height))
 	{

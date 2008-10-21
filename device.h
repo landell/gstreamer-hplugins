@@ -30,6 +30,7 @@ typedef struct {
 	DeviceBuffer *buffer;
 	int n_buffers;
 	int buffersize;
+	int fps;
 	unsigned char *framebuffer;
 } V4l2Device;
 
