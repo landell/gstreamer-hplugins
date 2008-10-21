@@ -178,8 +178,6 @@ int main (int argc, char **argv)
 	}
 
 	device.name = device_name;
-	device.width = 640;
-	device.height = 480;
 	device.prefix = file_prefix;
 	device.fps = DEFAULT_FPS;
 
