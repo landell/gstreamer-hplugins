@@ -22,6 +22,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/select.h>
+#include <errno.h>
 #include "device.h"
 #include "huffman.h"
 
@@ -249,34 +251,56 @@ int main (int argc, char **argv)
 		{		
 			fprintf (stderr, "Taking a picture...\n");
 
-			// TODO: Prevent this to get in infinite loop.
-			int i;
-			for (i=0; i < 2; ++i)
-			do
-				ret = device_getframe (&device);
-			while (ret == DEVICE_NOT_READY ||
-				ret == DEVICE_EMPTY_FRAME);
+			fd_set fdset;
+                        struct timeval timeout;
 
-			switch (ret)
+                        FD_ZERO (&fdset);
+                        FD_SET (device.fd, &fdset);
+
+                        timeout.tv_sec = 2;
+                        timeout.tv_usec = 0;
+
+                        ret = select (device.fd + 1, &fdset, NULL, NULL,
+				&timeout);
+
+			if (ret == 0)
 			{
-				case DEVICE_STREAM_ERROR:
-					fprintf (stderr, "STREAM ERROR\n");
-					break;
-				case DEVICE_BUFFER_ERROR:
-					fprintf (stderr, "BUFFER ERROR\n");
-					break;
-			}
-			
-			if (ret == DEVICE_OK)
+				fprintf (stderr, "Timeout.\n");
+			} else if (ret == -1)
 			{
-				// Now we got a pic. It must be adjusted
-				// and sent to a file.
-				if (!save_picture (device.framebuffer,
-					device.buffersize))
-					fprintf (stderr, "Done!\n");
-				else
-					fprintf (stderr,
-						"I can not save this image!\n");
+				fprintf (stderr, "I got an error: %d\n",
+					errno);
+			} else
+			{
+				ret = device_getframe (&device);
+
+				switch (ret)
+				{
+					case DEVICE_NOT_READY:
+						fprintf (stderr, "NOT READY\n");
+						break;
+					case DEVICE_EMPTY_FRAME:
+						fprintf (stderr, 
+							"EMPTY FRAME\n");
+					case DEVICE_STREAM_ERROR:
+						fprintf (stderr, "STREAM ERROR\n");
+						break;
+					case DEVICE_BUFFER_ERROR:
+						fprintf (stderr, "BUFFER ERROR\n");
+						break;
+				}
+
+				if (ret == DEVICE_OK)
+				{
+					// Now we got a pic. It must be adjusted
+					// and sent to a file.
+					if (!save_picture (device.framebuffer,
+						device.buffersize))
+						fprintf (stderr, "Done!\n");
+					else
+						fprintf (stderr,
+							"I can not save this image!\n");
+				}
 			}
 		}
 
