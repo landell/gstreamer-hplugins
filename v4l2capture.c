@@ -271,9 +271,12 @@ int main (int argc, char **argv)
 			{
 				// Now we got a pic. It must be adjusted
 				// and sent to a file.
-				save_picture (device.framebuffer,
-					device.buffersize);
-				fprintf (stderr, "Done!\n");
+				if (!save_picture (device.framebuffer,
+					device.buffersize))
+					fprintf (stderr, "Done!\n");
+				else
+					fprintf (stderr, "I can't save
+						this image!\n");
 			}
 		}
 
