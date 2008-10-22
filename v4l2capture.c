@@ -275,8 +275,8 @@ int main (int argc, char **argv)
 					device.buffersize))
 					fprintf (stderr, "Done!\n");
 				else
-					fprintf (stderr, "I can't save
-						this image!\n");
+					fprintf (stderr,
+						"I can not save this image!\n");
 			}
 		}
 
