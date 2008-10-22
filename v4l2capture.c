@@ -146,8 +146,13 @@ static int get_resolution (char *res, int *w, int *h)
 
 static void usage ()
 {
-  fprintf (stderr, "v4l2capture [-l] [-r resolution] [-o output_prefix]"
-		" [-d device_name]\n");
+  fprintf (stderr, "v4l2capture - Grab images from a V4L2 Device\n"
+	"[-r resolution (320x240)] "
+	"[-o output_prefix (image)] "
+	"[-d device_name (/dev/video0)] "
+	"[-t timeout per frame in ms (1000)] "
+	"[-e number of retrys (3)] "
+	"[-h this help]\n");
 }
 
 int main (int argc, char **argv)
@@ -173,6 +178,7 @@ int main (int argc, char **argv)
 				device_name = strdup (optarg);
 				break;
 			case '?':
+			case 'h':
 			default:
 				usage ();
 				exit (1);
