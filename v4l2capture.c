@@ -27,12 +27,14 @@
 #include "device.h"
 #include "huffman.h"
 
+#define TIMEOUT 1000
+#define DEFAULT_FPS 20
+
 static int list_res;
 static char *res_code = "320x240";
 static char *file_prefix = "image";
 static char *device_name = "/dev/video0";
-
-#define DEFAULT_FPS 20
+static int wait_time = TIMEOUT;
 
 /* JPEG Utils */
 
@@ -161,7 +163,7 @@ int main (int argc, char **argv)
 	int ret;
 	int c;
 
-	while ((c = getopt (argc, argv, "lr:o:d:")) != -1)
+	while ((c = getopt (argc, argv, "l:r:o:d:t:h")) != -1)
 	{
 		switch (c)
 		{
@@ -177,6 +179,9 @@ int main (int argc, char **argv)
 			case 'd':
 				device_name = strdup (optarg);
 				break;
+			case 't':
+				wait_time = atoi(strdup (optarg));
+				break;
 			case '?':
 			case 'h':
 			default:
@@ -188,6 +193,9 @@ int main (int argc, char **argv)
 	device.name = device_name;
 	device.prefix = file_prefix;
 	device.fps = DEFAULT_FPS;
+
+	if (wait_time == 0)
+		wait_time = TIMEOUT;
 
 	if (get_resolution (res_code, &device.width, &device.height))
 	{
@@ -263,8 +271,8 @@ int main (int argc, char **argv)
                         FD_ZERO (&fdset);
                         FD_SET (device.fd, &fdset);
 
-                        timeout.tv_sec = 2;
-                        timeout.tv_usec = 0;
+                        timeout.tv_sec = 0;
+                        timeout.tv_usec = wait_time * 1000;
 
                         ret = select (device.fd + 1, &fdset, NULL, NULL,
 				&timeout);
