@@ -254,7 +254,8 @@ int main (int argc, char **argv)
 			for (i=0; i < 2; ++i)
 			do
 				ret = device_getframe (&device);
-			while (ret == DEVICE_NOT_READY);
+			while (ret == DEVICE_NOT_READY ||
+				ret == DEVICE_EMPTY_FRAME);
 
 			switch (ret)
 			{

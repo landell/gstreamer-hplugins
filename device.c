@@ -35,6 +35,7 @@
 
 #define MAX_BUFFERS 20
 #define MIN_BUFFERS 5
+#define MIN_HEADER 0xaf
 
 int device_open (V4l2Device *dev)
 {
@@ -221,6 +222,10 @@ int device_getframe (V4l2Device *dev)
 
 	if (buf.index >= dev->n_buffers)
 		return DEVICE_BUFFER_ERROR;
+
+	// Ignore an empty frame
+	if (buf.bytesused <= MIN_HEADER)
+		return DEVICE_EMPTY_FRAME;
 
 	memcpy (dev->framebuffer, dev->buffer[buf.index].start,
 		buf.bytesused);
