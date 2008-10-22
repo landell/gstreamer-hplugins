@@ -29,12 +29,14 @@
 
 #define TIMEOUT 1000
 #define DEFAULT_FPS 20
+#define DEFAULT_RETRYS 3
 
 static int list_res;
 static char *res_code = "320x240";
 static char *file_prefix = "image";
 static char *device_name = "/dev/video0";
 static int wait_time = TIMEOUT;
+static int retrys = DEFAULT_RETRYS;
 
 /* JPEG Utils */
 
@@ -163,7 +165,7 @@ int main (int argc, char **argv)
 	int ret;
 	int c;
 
-	while ((c = getopt (argc, argv, "l:r:o:d:t:h")) != -1)
+	while ((c = getopt (argc, argv, "l:r:o:d:t:e:h")) != -1)
 	{
 		switch (c)
 		{
@@ -179,8 +181,11 @@ int main (int argc, char **argv)
 			case 'd':
 				device_name = strdup (optarg);
 				break;
+			case 'e':
+				retrys = atoi (strdup (optarg));
+				break;
 			case 't':
-				wait_time = atoi(strdup (optarg));
+				wait_time = atoi (strdup (optarg));
 				break;
 			case '?':
 			case 'h':
@@ -196,6 +201,9 @@ int main (int argc, char **argv)
 
 	if (wait_time == 0)
 		wait_time = TIMEOUT;
+
+	if (retrys == 0)
+		retrys = DEFAULT_RETRYS;
 
 	if (get_resolution (res_code, &device.width, &device.height))
 	{
@@ -274,46 +282,61 @@ int main (int argc, char **argv)
                         timeout.tv_sec = 0;
                         timeout.tv_usec = wait_time * 1000;
 
-                        ret = select (device.fd + 1, &fdset, NULL, NULL,
-				&timeout);
+                        int i; 
+			for (i = 0; i < retrys; ++i)
+			{
+				ret = select (device.fd + 1, &fdset, NULL, NULL,
+					&timeout);
 
-			if (ret == 0)
-			{
-				fprintf (stderr, "Timeout.\n");
-			} else if (ret == -1)
-			{
-				fprintf (stderr, "I got an error: %d\n",
-					errno);
-			} else
-			{
-				ret = device_getframe (&device);
-
-				switch (ret)
+				if (ret == 0)
 				{
-					case DEVICE_NOT_READY:
-						fprintf (stderr, "NOT READY\n");
-						break;
-					case DEVICE_EMPTY_FRAME:
-						fprintf (stderr, 
-							"EMPTY FRAME\n");
-					case DEVICE_STREAM_ERROR:
-						fprintf (stderr, "STREAM ERROR\n");
-						break;
-					case DEVICE_BUFFER_ERROR:
-						fprintf (stderr, "BUFFER ERROR\n");
-						break;
-				}
-
-				if (ret == DEVICE_OK)
+					fprintf (stderr,
+						"[%d] Timeout.\n", i);
+				} else if (ret == -1)
 				{
-					// Now we got a pic. It must be adjusted
-					// and sent to a file.
-					if (!save_picture (device.framebuffer,
-						device.buffersize))
-						fprintf (stderr, "Done!\n");
-					else
-						fprintf (stderr,
-							"I can not save this image!\n");
+					fprintf (stderr,
+						"[%d] I got an error: %d\n",
+						i, errno);
+				} else
+				{
+					ret = device_getframe (&device);
+
+					switch (ret)
+					{
+						case DEVICE_NOT_READY:
+							fprintf (stderr,
+								"NOT READY\n");
+							break;
+						case DEVICE_EMPTY_FRAME:
+							fprintf (stderr, 
+								"EMPTY FRAME\n");
+							break;
+						case DEVICE_STREAM_ERROR:
+							fprintf (stderr,
+								"STREAM ERROR\n");
+							break;
+						case DEVICE_BUFFER_ERROR:
+							fprintf (stderr,
+							"BUFFER ERROR\n");
+							break;
+					}
+
+					if (ret == DEVICE_OK)
+					{
+						// Now we got a pic. It must be adjusted
+						// and sent to a file.
+						if (!save_picture (device.framebuffer,
+							device.buffersize))
+						{
+							fprintf (stderr,
+								"[%d] Done!\n",
+								i);
+							break;
+						} else
+							fprintf (stderr,
+								"[%d] I can not save this image!\n",
+								i);
+					}
 				}
 			}
 		}
