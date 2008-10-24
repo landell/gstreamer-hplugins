@@ -1,4 +1,9 @@
-/*
+/*  Copyright 2008 Samuel R. C. Vale <srcvale@holoscopio.com>
+
+    This software was based on V4L2 Documentation, and 
+    luvcview (Copyright 2005 2006 2007 Laurent Pinchart, Michel
+    Xhaard, and 2006 Gabriel A. Devenyi).
+
     This file is part of v4l2capture.
 
     V4l2capture is free software: you can redistribute it and/or modify
@@ -13,9 +18,6 @@
 
     You should have received a copy of the GNU General Public License
     along with v4l2capture.  If not, see <http://www.gnu.org/licenses/>.
-
-    Copyright 2008 Samuel R. C. Vale
-    srcvale@holoscopio.com
 */
 
 #include <stdlib.h>
