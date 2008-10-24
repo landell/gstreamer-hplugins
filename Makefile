@@ -12,5 +12,8 @@ all: v4l2capture
 v4l2capture: $(OBJECTS)
 	$(CC) -o v4l2capture $(OBJECTS)
 
+install:
+	cp v4l2capture /usr/bin/
+
 clean:
 	rm -f v4l2capture $(OBJECTS)
