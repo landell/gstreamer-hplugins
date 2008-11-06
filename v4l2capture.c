@@ -45,11 +45,11 @@ static int retries = DEFAULT_RETRIES;
 int is_huffman (unsigned char *buf, int size)
 {
 	unsigned char *ptbuf;
-	int i = 0;
 	ptbuf = buf;
 	while (((ptbuf[0] << 8) | ptbuf[1]) != 0xffda)
 	{
-		if (i++ > 2048)
+		/* Max window we look for the magic cookie */
+		if (ptbuf - buf > 2048)
 			return 0;
 		if (((ptbuf[0] << 8) | ptbuf[1]) == 0xffc4)
 			return 1;
