@@ -31,14 +31,14 @@
 
 #define TIMEOUT 1000
 #define DEFAULT_FPS 20
-#define DEFAULT_RETRYS 3
+#define DEFAULT_RETRIES 3
 
 static int list_res;
 static char *res_code = "320x240";
 static char *file_prefix = "image";
 static char *device_name = "/dev/video0";
 static int wait_time = TIMEOUT;
-static int retrys = DEFAULT_RETRYS;
+static int retries = DEFAULT_RETRIES;
 
 /* JPEG Utils */
 
@@ -157,7 +157,7 @@ static void usage ()
 	"[-o output_prefix (image)] "
 	"[-d device_name (/dev/video0)] "
 	"[-t timeout per frame in ms (1000)] "
-	"[-e number of retrys (3)] "
+	"[-e number of retries (3)] "
 	"[-h this help]\n");
 }
 
@@ -184,7 +184,7 @@ int main (int argc, char **argv)
 				device_name = strdup (optarg);
 				break;
 			case 'e':
-				retrys = atoi (strdup (optarg));
+				retries = atoi (strdup (optarg));
 				break;
 			case 't':
 				wait_time = atoi (strdup (optarg));
@@ -204,8 +204,8 @@ int main (int argc, char **argv)
 	if (wait_time == 0)
 		wait_time = TIMEOUT;
 
-	if (retrys == 0)
-		retrys = DEFAULT_RETRYS;
+	if (retries == 0)
+		retries = DEFAULT_RETRIES;
 
 	if (get_resolution (res_code, &device.width, &device.height))
 	{
@@ -285,7 +285,7 @@ int main (int argc, char **argv)
                         timeout.tv_usec = wait_time * 1000;
 
                         int i; 
-			for (i = 0; i < retrys; ++i)
+			for (i = 0; i < retries; ++i)
 			{
 				ret = select (device.fd + 1, &fdset, NULL, NULL,
 					&timeout);

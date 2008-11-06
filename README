@@ -54,7 +54,7 @@ Running with parameters, v4l2capture will try take a 320x240 image from
 -o output_prefix - the name of output file, without extension;
 -d device name - path to v4l2 device;
 -t timeout per frame - time to wait for a frame, in miliseconds;
--e number of retrys - number of trys to take a non-empty or
+-e number of retries - number of tries to take a non-empty or
 non-corrupted image;
 -h - help sumary;
 
