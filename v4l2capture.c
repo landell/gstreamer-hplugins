@@ -69,7 +69,7 @@ static int save_picture (unsigned char *buf, int size)
 	int sizein;
 	char *name = NULL;
 
-	name = calloc(NAME_SIZE, 1);
+	name = malloc(NAME_SIZE);
 	if (!name)
 		return 1;
 	snprintf (name, NAME_SIZE, "%s.jpg", file_prefix);

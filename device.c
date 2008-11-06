@@ -56,8 +56,7 @@ int device_open (V4l2Device *dev)
 		return DEVICE_INVALID;
 
 	dev->buffersize = dev->width * dev->height * 2;
-	dev->framebuffer = (unsigned char *) calloc(1,
-		(size_t) dev->buffersize);
+	dev->framebuffer = malloc(dev->buffersize);
 
 	// TODO: Test allocated buffer.
 
@@ -140,7 +139,7 @@ int device_init (V4l2Device *dev)
 	if (b_req.count < MIN_BUFFERS)
 		return DEVICE_OUT_OF_MEMORY;
 
-        dev->buffer = calloc (b_req.count, sizeof (DeviceBuffer));
+        dev->buffer = malloc (b_req.count * sizeof (DeviceBuffer));
 	
 	if (!dev->buffer)
 		return DEVICE_OUT_OF_MEMORY;
