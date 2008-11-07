@@ -99,7 +99,7 @@ int device_init (V4l2Device *dev)
 	image_format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	image_format.fmt.pix.width = dev->width; 
 	image_format.fmt.pix.height = dev->height;
-	image_format.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
+	image_format.fmt.pix.pixelformat = dev->pixelformat;
 	image_format.fmt.pix.field = V4L2_FIELD_ANY;
 
 	if (ioctl (dev->fd, VIDIOC_S_FMT, &image_format) < 0)

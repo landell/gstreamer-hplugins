@@ -24,6 +24,7 @@
 #ifndef _V4L2_DEVICE_H_
 #define _V4L2_DEVICE_H_
 
+#include <sys/types.h>
 #include <linux/videodev2.h>
 
 typedef enum {
@@ -59,6 +60,7 @@ typedef struct {
 	int fps;
 	unsigned char *framebuffer;
 	struct v4l2_capability device_capability;
+	u_int32_t pixelformat;
 } V4l2Device;
 
 int device_open (V4l2Device *dev);
@@ -67,5 +69,6 @@ int device_start_capture (V4l2Device *dev);
 int device_stop_capture (V4l2Device *dev);
 int device_getframe (V4l2Device *dev);
 int device_close (V4l2Device *dev);
+int device_negotiate (V4l2Device *dev, u_int32_t *formats);
 
 #endif

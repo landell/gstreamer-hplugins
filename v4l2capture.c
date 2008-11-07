@@ -169,6 +169,11 @@ int main (int argc, char **argv)
 	V4l2Device device;
 	int ret;
 	int c;
+	u_int32_t formats[] =
+	{
+		V4L2_PIX_FMT_MJPEG,
+		0
+	};
 
 	while ((c = getopt (argc, argv, "l:r:o:d:t:e:h")) != -1)
 	{
@@ -225,6 +230,17 @@ int main (int argc, char **argv)
 		fprintf (stderr, "Invalid Device: %s\n", device.name);
 		exit (1);	
 	}	
+
+	if (device_negotiate (&device, formats) == 0)
+	{
+		fprintf (stderr, "Selected pixel format %x\n",
+			device.pixelformat);
+	}
+	else
+	{
+		fprintf (stderr, "Could not select any supported format\n");
+		exit (1);
+	}
 	
 	ret = device_init (&device);
 	if (ret != DEVICE_OK)

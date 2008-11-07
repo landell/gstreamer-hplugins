@@ -2,7 +2,7 @@ GCC = gcc
 CROSS_COMPILE ?=
 CFLAGS ?= -g -Wall
 CC := $(CROSS_COMPILE)$(GCC) $(CFLAGS)
-OBJECTS = v4l2capture.o device.o
+OBJECTS = v4l2capture.o device.o negotiation.o
 
 all: v4l2capture
 
