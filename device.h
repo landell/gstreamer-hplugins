@@ -1,4 +1,5 @@
 /*  Copyright 2008 Samuel R. C. Vale <srcvale@holoscopio.com>
+    Copyright 2008 Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
 
     This software was based on V4L2 Documentation, and 
     luvcview (Copyright 2005 2006 2007 Laurent Pinchart, Michel
