@@ -81,7 +81,7 @@ int device_init (V4l2Device *dev)
 	memset (&b_req, 0, sizeof(struct v4l2_requestbuffers));
 	memset (&setfps, 0, sizeof(struct v4l2_streamparm));
 
-	// TODO: Test if device is already initialized.
+	/* TODO: Test if device is already initialized. */
 
 	if (ioctl (dev->fd, VIDIOC_QUERYCAP, &device_capability) < 0)
 		return DEVICE_IS_NOT_V4L2;
@@ -92,10 +92,11 @@ int device_init (V4l2Device *dev)
 	if (!(device_capability.capabilities & V4L2_CAP_STREAMING))
 		return DEVICE_MODE_NOT_SUPPORTED;
 
-	// TODO: Probe for Read and Write interface, and use it if
-	// available!
-	//if (!(device_capability.capabilities & V4L2_CAP_READWRITE))
-	//	return DEVICE_MODE_NOT_SUPPORTED;
+	/* TODO: Probe for Read and Write interface, and use it if
+	 * available!
+	 *if (!(device_capability.capabilities & V4L2_CAP_READWRITE))
+	 *	return DEVICE_MODE_NOT_SUPPORTED;
+	 */
 
 	image_format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	image_format.fmt.pix.width = dev->width; 
@@ -110,7 +111,7 @@ int device_init (V4l2Device *dev)
 		(image_format.fmt.pix.height != dev->height)) 
 		return DEVICE_INVALID_FORMAT;
 
-        // Buggy driver paranoia.
+        /* Buggy driver paranoia. */
 	min = image_format.fmt.pix.width * 2;
         if (image_format.fmt.pix.bytesperline < min)
                 image_format.fmt.pix.bytesperline = min;
@@ -118,7 +119,7 @@ int device_init (V4l2Device *dev)
         if (image_format.fmt.pix.sizeimage < min)
                 image_format.fmt.pix.sizeimage = min;
 
-	// Framerate
+	/* Framerate */
 	if ((dev->fps < 1) || (dev->fps > 30))
 		dev->fps = 15;
 
@@ -127,7 +128,7 @@ int device_init (V4l2Device *dev)
 	setfps.parm.capture.timeperframe.denominator = dev->fps;
 	ioctl(dev->fd, VIDIOC_S_PARM, &setfps);
 
-	// Request Buffers for MMAP
+	/* Request Buffers for MMAP */
 	b_req.count = MAX_BUFFERS;
 	b_req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	b_req.memory = V4L2_MEMORY_MMAP;
@@ -137,7 +138,7 @@ int device_init (V4l2Device *dev)
                 if (EINVAL == errno)
 			return DEVICE_MODE_NOT_SUPPORTED;
 		else
-			return DEVICE_ERROR; //?
+			return DEVICE_ERROR; /* ? */
 	}
 
 	if (b_req.count < MIN_BUFFERS)
@@ -148,11 +149,11 @@ int device_init (V4l2Device *dev)
 	if (!dev->buffer)
 		return DEVICE_OUT_OF_MEMORY;
 
-	// buffer mapping
+	/* buffer mapping */
 	dev->n_buffers = b_req.count;
 	for (b = 0; b < dev->n_buffers; ++b)
 	{
-		// TODO: remove this "buf" allocation, if useless.
+		/* TODO: remove this "buf" allocation, if useless. */
 		struct v4l2_buffer buf;
 		memset (&buf, 0, sizeof(struct v4l2_buffer));
 
@@ -176,7 +177,7 @@ int device_init (V4l2Device *dev)
 
 int device_start_capture (V4l2Device *dev)
 {
-	// TODO: Teste if capture is running.
+	/* TODO: Teste if capture is running. */
 	unsigned int i;
 	enum v4l2_buf_type type;
 
@@ -228,7 +229,7 @@ int device_getframe (V4l2Device *dev)
 	if (buf.index >= dev->n_buffers)
 		return DEVICE_BUFFER_ERROR;
 
-	// Ignore an empty frame
+	/* Ignore an empty frame */
 	if (buf.bytesused <= MIN_HEADER)
 		return DEVICE_EMPTY_FRAME;
 
@@ -256,7 +257,7 @@ int device_stop_capture (V4l2Device *dev)
 
 int device_close (V4l2Device *dev)
 {
-	// TODO: Free allocated buffers before close device.
+	/* TODO: Free allocated buffers before close device. */
 
 	if (dev->framebuffer)
 		free (dev->framebuffer);
