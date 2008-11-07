@@ -62,7 +62,13 @@ int is_huffman (unsigned char *buf, int size)
 	return 0;
 }
 
-static int save_picture (unsigned char *buf, int size)
+static int dummy_save_picture (unsigned char *buf, int size)
+{
+	fprintf (stderr, "This is just a dummy!\n");
+	return 0;
+}
+
+static int mjpeg_save_picture (unsigned char *buf, int size)
 {
 	#define NAME_SIZE 80
 	#define MIN_SIZE 128
@@ -166,12 +172,14 @@ static void usage ()
 
 int main (int argc, char **argv)
 {
+	int (*save_picture) (unsigned char *, int);
 	V4l2Device device;
 	int ret;
 	int c;
 	u_int32_t formats[] =
 	{
 		V4L2_PIX_FMT_MJPEG,
+		V4L2_PIX_FMT_YUYV,
 		0
 	};
 
@@ -240,6 +248,15 @@ int main (int argc, char **argv)
 	{
 		fprintf (stderr, "Could not select any supported format\n");
 		exit (1);
+	}
+
+	switch (device.pixelformat)
+	{
+		case V4L2_PIX_FMT_MJPEG:
+			save_picture = mjpeg_save_picture;
+			break;
+		default:
+			save_picture = dummy_save_picture;
 	}
 	
 	ret = device_init (&device);
