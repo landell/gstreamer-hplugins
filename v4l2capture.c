@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <sys/select.h>
 #include <errno.h>
+#include <ctype.h>
 #include "device.h"
 #include "huffman.h"
 
@@ -125,25 +126,26 @@ static int save_picture (unsigned char *buf, int size)
 
 static int get_resolution (char *res, int *w, int *h)
 {
-	#define B_SIZE	6
-	char w_buf[B_SIZE], h_buf[B_SIZE], *aux;
+	int W, H;
+	char *next;
 
-	memset (w_buf, '\0', B_SIZE);
-	memset (h_buf, '\0', B_SIZE);
-
-	aux = strchr (res, 'x');
-
-	if (aux == NULL)
+	errno = 0;
+	W = strtol (res, &next, 10);
+	if (errno == ERANGE)
+		return 1;
+	while (*next != 0 && isspace (*next)) next++;
+	if (*next != 'x' && *next != 'X')
+		return 1;
+	next++;
+	errno = 0;
+	H = strtol (next, &next, 10);
+	if (errno == ERANGE)
 		return 1;
 
-	strncpy (w_buf, res, (aux - res));
-	strcpy (h_buf, (aux + 1));
-
-	*w = atoi (w_buf);
-	*h = atoi (h_buf);
-
-	if ((*w == 0) || (*h == 0))
-		return 1;
+	if (w)
+		*w = W;
+	if (h)
+		*h = H;
 
 	return 0;
 }
