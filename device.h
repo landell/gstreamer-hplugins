@@ -23,6 +23,8 @@
 #ifndef _V4L2_DEVICE_H_
 #define _V4L2_DEVICE_H_
 
+#include <linux/videodev2.h>
+
 typedef enum {
 	DEVICE_OK = 0,
 	DEVICE_ERROR,
@@ -55,6 +57,7 @@ typedef struct {
 	int buffersize;
 	int fps;
 	unsigned char *framebuffer;
+	struct v4l2_capability device_capability;
 } V4l2Device;
 
 int device_open (V4l2Device *dev);

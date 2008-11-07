@@ -41,19 +41,24 @@
 
 int device_open (V4l2Device *dev)
 {
-	struct stat st;
-
 	dev->buffer = NULL;
 	dev->framebuffer = NULL;
 
-	if (stat (dev->name, &st) == -1)
-		return DEVICE_INVALID;
-
-	if (!S_ISCHR (st.st_mode))
-		return DEVICE_INVALID;
-
 	if ((dev->fd = open (dev->name, O_RDWR | O_NONBLOCK, 0)) < 0)
 		return DEVICE_INVALID;
+
+	memset (&dev->device_capability, 0, sizeof(struct v4l2_capability));
+	if (ioctl (dev->fd, VIDIOC_QUERYCAP, &dev->device_capability) < 0)
+	{
+		close (dev->fd);
+		return DEVICE_IS_NOT_V4L2;
+	}
+
+	if (!(dev->device_capability.capabilities & V4L2_CAP_VIDEO_CAPTURE))
+	{
+		close (dev->fd);
+		return DEVICE_DONT_CAPTURE;
+	}
 
 	dev->buffersize = dev->width * dev->height * 2;
 	dev->framebuffer = malloc(dev->buffersize);
@@ -69,27 +74,19 @@ int device_open (V4l2Device *dev)
 
 int device_init (V4l2Device *dev)
 {
-	struct v4l2_capability device_capability;
 	struct v4l2_format image_format;
 	struct v4l2_requestbuffers b_req;
 	struct v4l2_streamparm setfps;
 	unsigned int min;
 	int b;
 
-	memset (&device_capability, 0, sizeof(struct v4l2_capability));
 	memset (&image_format, 0, sizeof(struct v4l2_format));
 	memset (&b_req, 0, sizeof(struct v4l2_requestbuffers));
 	memset (&setfps, 0, sizeof(struct v4l2_streamparm));
 
 	/* TODO: Test if device is already initialized. */
 
-	if (ioctl (dev->fd, VIDIOC_QUERYCAP, &device_capability) < 0)
-		return DEVICE_IS_NOT_V4L2;
-
-	if (!(device_capability.capabilities & V4L2_CAP_VIDEO_CAPTURE))
-		return DEVICE_DONT_CAPTURE;
-
-	if (!(device_capability.capabilities & V4L2_CAP_STREAMING))
+	if (!(dev->device_capability.capabilities & V4L2_CAP_STREAMING))
 		return DEVICE_MODE_NOT_SUPPORTED;
 
 	/* TODO: Probe for Read and Write interface, and use it if
