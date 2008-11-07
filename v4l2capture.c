@@ -177,19 +177,19 @@ int main (int argc, char **argv)
 				list_res = 1;
 				break;
 			case 'r':
-				res_code = strdup (optarg);
+				res_code = optarg;
 				break;
 			case 'o':
-				file_prefix = strdup (optarg);
+				file_prefix = optarg;
 				break;
 			case 'd':
-				device_name = strdup (optarg);
+				device_name = optarg;
 				break;
 			case 'e':
-				retries = atoi (strdup (optarg));
+				retries = strtol (optarg, NULL, 10);
 				break;
 			case 't':
-				wait_time = atoi (strdup (optarg));
+				wait_time = strtol (optarg, NULL, 10);
 				break;
 			case '?':
 			case 'h':
