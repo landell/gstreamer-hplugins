@@ -58,7 +58,11 @@ int device_open (V4l2Device *dev)
 	dev->buffersize = dev->width * dev->height * 2;
 	dev->framebuffer = malloc(dev->buffersize);
 
-	// TODO: Test allocated buffer.
+	if (dev->framebuffer == NULL)
+	{
+		close (dev->fd);
+		return DEVICE_OUT_OF_MEMORY;
+	}
 
 	return DEVICE_OK;
 }
