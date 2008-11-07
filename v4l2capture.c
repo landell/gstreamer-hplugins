@@ -237,12 +237,12 @@ int main (int argc, char **argv)
 				break;
 			case DEVICE_DONT_CAPTURE:
 				fprintf (stderr,
-					"Device %s don't support video capture.\n",
+					"Device %s does not support video capture.\n",
 					device.name); 
 				break;
 			case DEVICE_MODE_NOT_SUPPORTED:
 				fprintf (stderr,
-					"Device %s don't support MMAP.\n",
+					"Device %s does not support MMAP.\n",
 					device.name);
 				break;
 			case DEVICE_INVALID_FORMAT:
@@ -254,7 +254,7 @@ int main (int argc, char **argv)
 				break;
 			default:
 				fprintf (stderr,
-					"Unknow or not handled error :(.\n");
+					"Unknown or not handled error.\n");
 				break;
 		}
 	} else
@@ -299,8 +299,8 @@ int main (int argc, char **argv)
 				} else if (ret == -1)
 				{
 					fprintf (stderr,
-						"[%d] I got an error: %d\n",
-						i, errno);
+						"[%d] I got an error: %s\n",
+						i, strerror (errno));
 				} else
 				{
 					ret = device_getframe (&device);
@@ -338,7 +338,7 @@ int main (int argc, char **argv)
 							break;
 						} else
 							fprintf (stderr,
-								"[%d] I can not save this image!\n",
+								"[%d] I cannot save this image!\n",
 								i);
 					}
 				}
