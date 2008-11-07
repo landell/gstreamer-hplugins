@@ -20,8 +20,8 @@
     along with v4l2capture.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _H_INTERFACE_
-#define _H_INTERFACE_
+#ifndef _V4L2_DEVICE_H_
+#define _V4L2_DEVICE_H_
 
 typedef enum {
 	DEVICE_OK = 0,
