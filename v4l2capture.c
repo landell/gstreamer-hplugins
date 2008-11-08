@@ -241,8 +241,11 @@ int main (int argc, char **argv)
 
 	if (device_negotiate (&device, formats) == 0)
 	{
-		fprintf (stderr, "Selected pixel format %x\n",
-			device.pixelformat);
+		fprintf (stderr, "Selected pixel format: %c%c%c%c\n",
+			device.pixelformat,
+			device.pixelformat >> 8,
+			device.pixelformat >> 16,
+			device.pixelformat >> 24);
 	}
 	else
 	{
