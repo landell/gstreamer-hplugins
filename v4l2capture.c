@@ -85,7 +85,7 @@ static int mjpeg_save_picture (unsigned char *buf, int size)
 
 	if (file != NULL)
 	{
-		// look for JPEG start
+		/* look for JPEG start */
 		ps = buf;
 		while (((ps[0] << 8 | ps[1]) != 0xffd8) && 
 			(ps < (buf + size - MIN_SIZE)))
@@ -110,7 +110,7 @@ static int mjpeg_save_picture (unsigned char *buf, int size)
 					pc++;
 				} else
 				{
-					// corrupted file
+					/* corrupted file */
 					fclose (file);
 					free (name);
 					return 1;
@@ -364,8 +364,9 @@ int main (int argc, char **argv)
 
 					if (ret == DEVICE_OK)
 					{
-						// Now we got a pic. It must be adjusted
-						// and sent to a file.
+						/* Now we got a pic. It must be adjusted
+						 * and sent to a file.
+						 */
 						if (!save_picture (device.framebuffer,
 							device.buffersize))
 						{
