@@ -62,6 +62,19 @@ int is_huffman (unsigned char *buf, int size)
 	return 0;
 }
 
+static char * get_filename (void)
+{
+	#define NAME_SIZE 80
+	#define MIN_SIZE 128
+	char *name = NULL;
+
+	name = malloc(NAME_SIZE);
+	if (!name)
+		return NULL;
+	snprintf (name, NAME_SIZE, "%s.jpg", file_prefix);
+	return name;
+}
+
 static int dummy_save_picture (unsigned char *buf, int size)
 {
 	fprintf (stderr, "This is just a dummy!\n");
@@ -70,17 +83,13 @@ static int dummy_save_picture (unsigned char *buf, int size)
 
 static int mjpeg_save_picture (unsigned char *buf, int size)
 {
-	#define NAME_SIZE 80
-	#define MIN_SIZE 128
 	FILE *file;
 	unsigned char *ps, *pc;
 	int sizein;
-	char *name = NULL;
+	char *name = get_filename ();
 
-	name = malloc(NAME_SIZE);
 	if (!name)
 		return 1;
-	snprintf (name, NAME_SIZE, "%s.jpg", file_prefix);
 	file = fopen (name, "wb");
 
 	if (file != NULL)
