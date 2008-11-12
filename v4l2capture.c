@@ -81,6 +81,27 @@ static int dummy_save_picture (unsigned char *buf, int size)
 	return 0;
 }
 
+static int raw_save_picture (unsigned char *buf, int size)
+{
+	FILE *file;
+	char *name = get_filename ();
+	if (!name)
+		return 1;
+	file = fopen (name, "wb");
+
+	if (file == NULL)
+	{
+		free (name);
+		return 1;
+	}
+
+	fwrite (buf, size, 1, file);
+	fclose (file);
+
+	free (name);
+	return 0;
+}
+
 static int mjpeg_save_picture (unsigned char *buf, int size)
 {
 	FILE *file;
@@ -268,7 +289,7 @@ int main (int argc, char **argv)
 			save_picture = mjpeg_save_picture;
 			break;
 		default:
-			save_picture = dummy_save_picture;
+			save_picture = raw_save_picture;
 	}
 	
 	ret = device_init (&device);
