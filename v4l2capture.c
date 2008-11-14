@@ -76,30 +76,9 @@ static char * get_filename (V4l2Device *dev)
 	return name;
 }
 
-static int dummy_save_picture (V4l2Device *dev)
+static int raw_save_image (ImageBuffer *image, FILE *file)
 {
-	fprintf (stderr, "This is just a dummy!\n");
-	return 0;
-}
-
-static int raw_save_picture (V4l2Device *dev)
-{
-	FILE *file;
-	char *name = get_filename (dev);
-	if (!name)
-		return 1;
-	file = fopen (name, "wb");
-
-	if (file == NULL)
-	{
-		free (name);
-		return 1;
-	}
-
-	fwrite (dev->image.data, dev->image.len, 1, file);
-	fclose (file);
-
-	free (name);
+	fwrite (image->data, image->len, 1, file);
 	return 0;
 }
 
@@ -128,7 +107,8 @@ static int jpegcode_save_image (ImageBuffer *image, FILE *file)
 	return 0;
 }
 
-static int jpegcode_save_picture (V4l2Device *dev)
+static int save_picture (V4l2Device *dev,
+			 int (*save_image) (ImageBuffer *, FILE *))
 {
 	int r;
 	FILE *file;
@@ -143,7 +123,7 @@ static int jpegcode_save_picture (V4l2Device *dev)
 		return 1;
 	}
 
-	r = jpegcode_save_image (&dev->image, file);
+	r = save_image (&dev->image, file);
 
 	fclose (file);
 
@@ -151,64 +131,47 @@ static int jpegcode_save_picture (V4l2Device *dev)
 	return r;
 }
 
-static int mjpeg_save_picture (V4l2Device *dev)
+static int mjpeg_save_image (ImageBuffer *image, FILE *file)
 {
-	unsigned char *buf = dev->image.data;
-	int size = dev->image.len;
-	FILE *file;
+	unsigned char *buf = image->data;
+	int size = image->len;
 	unsigned char *ps, *pc;
 	int sizein;
-	char *name = get_filename (dev);
 
-	if (!name)
+	/* look for JPEG start */
+	ps = buf;
+	while (((ps[0] << 8 | ps[1]) != 0xffd8) && 
+		(ps < (buf + size - MIN_SIZE)))
+		ps++;
+
+	if (ps >= buf + size - MIN_SIZE)
 		return 1;
-	file = fopen (name, "wb");
 
-	if (file != NULL)
+	size -= ps - buf;
+	pc = ps;
+
+	if (!is_huffman (ps, size))
 	{
-		/* look for JPEG start */
-		ps = buf;
-		while (((ps[0] << 8 | ps[1]) != 0xffd8) && 
-			(ps < (buf + size - MIN_SIZE)))
-			ps++;
-
-		if (ps >= buf + size - MIN_SIZE)
+		while (((pc[0] << 8) | pc[1]) != 0xffc0)
 		{
-			fclose (file);
-			free (name);
-			return 1;
-		}
-
-		size -= ps - buf;
-		pc = ps;
-
-		if (!is_huffman (ps, size))
-		{
-			while (((pc[0] << 8) | pc[1]) != 0xffc0)
+			if (pc < (ps + size - 2))
 			{
-				if (pc < (ps + size - 2))
-				{
-					pc++;
-				} else
-				{
-					/* corrupted file */
-					fclose (file);
-					free (name);
-					return 1;
-				}
+				pc++;
+			} else
+			{
+				/* corrupted file */
+				return 1;
 			}
-			sizein = pc - ps;
-			fwrite (ps, sizein, 1, file);
-			fwrite (dht_data, DHT_SIZE, 1, file);
-			fwrite (pc, size - sizein, 1, file);
-		} else
-		{
-			fwrite (pc, size, 1, file);
 		}
-		fclose (file);
-        }
+		sizein = pc - ps;
+		fwrite (ps, sizein, 1, file);
+		fwrite (dht_data, DHT_SIZE, 1, file);
+		fwrite (pc, size - sizein, 1, file);
+	} else
+	{
+		fwrite (pc, size, 1, file);
+	}
 
-	free (name);
 	return 0;
 }
 
@@ -253,7 +216,7 @@ static void usage ()
 
 int main (int argc, char **argv)
 {
-	int (*save_picture) (V4l2Device *);
+	int (*save_image) (ImageBuffer *, FILE *);
 	V4l2Device device;
 	int ret;
 	int c;
@@ -337,13 +300,13 @@ int main (int argc, char **argv)
 	switch (device.pixelformat)
 	{
 		case V4L2_PIX_FMT_MJPEG:
-			save_picture = mjpeg_save_picture;
+			save_image = mjpeg_save_image;
 			break;
 		case V4L2_PIX_FMT_YUV420:
-			save_picture = jpegcode_save_picture;
+			save_image = jpegcode_save_image;
 			break;
 		default:
-			save_picture = raw_save_picture;
+			save_image = raw_save_image;
 	}
 	
 	ret = device_init (&device);
@@ -451,7 +414,7 @@ int main (int argc, char **argv)
 						/* Now we got a pic. It must be adjusted
 						 * and sent to a file.
 						 */
-						if (!save_picture (&device))
+						if (!save_picture (&device, save_image))
 						{
 							fprintf (stderr,
 								"[%d] Done!\n",
