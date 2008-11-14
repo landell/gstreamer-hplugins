@@ -107,6 +107,46 @@ static int jpegcode_save_image (ImageBuffer *image, FILE *file)
 	return 0;
 }
 
+static int yuyv_save_image (ImageBuffer *image, FILE *file)
+{
+	ImageBuffer *dst;
+	int i;
+	int height = image->fmt.height;
+	int width = image->fmt.width;
+	unsigned char *data = image->data;
+	dst = malloc (sizeof (ImageBuffer));
+	if (dst == NULL)
+		return 1;
+	dst->fmt.height = height;
+	dst->fmt.width = width;
+	dst->fmt.pixelformat = V4L2_PIX_FMT_YUYV;
+	dst->fmt.bytesperline = width * 3;
+	dst->len = height * width * 3;
+	dst->data = malloc (dst->len);
+	if (dst->data == NULL)
+	{
+		free (dst);
+		return 1;
+	}
+	for (i = 0; i < height * width; i++)
+	{
+		/* Y */
+		dst->data[3*i] = data[2*i];
+		if (i % 2 == 0)
+		{
+			/* U */
+			dst->data[3*i+1] = dst->data[3*i+4] = data[2*i+1];
+			/* V */
+			dst->data[3*i+2] = dst->data[3*i+5] = data[2*i+3];
+		}
+	}
+	
+	jpegcode_save_image (dst, file);
+
+	return 0;
+
+}
+
 static int save_picture (V4l2Device *dev,
 			 int (*save_image) (ImageBuffer *, FILE *))
 {
@@ -304,6 +344,9 @@ int main (int argc, char **argv)
 			break;
 		case V4L2_PIX_FMT_YUV420:
 			save_image = jpegcode_save_image;
+			break;
+		case V4L2_PIX_FMT_YUYV:
+			save_image = yuyv_save_image;
 			break;
 		default:
 			save_image = raw_save_image;
