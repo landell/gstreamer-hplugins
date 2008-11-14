@@ -62,7 +62,7 @@ int is_huffman (unsigned char *buf, int size)
 	return 0;
 }
 
-static char * get_filename (void)
+static char * get_filename (V4l2Device *dev)
 {
 	#define NAME_SIZE 80
 	#define MIN_SIZE 128
@@ -71,20 +71,20 @@ static char * get_filename (void)
 	name = malloc(NAME_SIZE);
 	if (!name)
 		return NULL;
-	snprintf (name, NAME_SIZE, "%s.jpg", file_prefix);
+	snprintf (name, NAME_SIZE, "%s.jpg", dev->prefix);
 	return name;
 }
 
-static int dummy_save_picture (unsigned char *buf, int size)
+static int dummy_save_picture (V4l2Device *dev)
 {
 	fprintf (stderr, "This is just a dummy!\n");
 	return 0;
 }
 
-static int raw_save_picture (unsigned char *buf, int size)
+static int raw_save_picture (V4l2Device *dev)
 {
 	FILE *file;
-	char *name = get_filename ();
+	char *name = get_filename (dev);
 	if (!name)
 		return 1;
 	file = fopen (name, "wb");
@@ -95,19 +95,21 @@ static int raw_save_picture (unsigned char *buf, int size)
 		return 1;
 	}
 
-	fwrite (buf, size, 1, file);
+	fwrite (dev->framebuffer, dev->buffersize, 1, file);
 	fclose (file);
 
 	free (name);
 	return 0;
 }
 
-static int mjpeg_save_picture (unsigned char *buf, int size)
+static int mjpeg_save_picture (V4l2Device *dev)
 {
+	unsigned char *buf = dev->framebuffer;
+	int size = dev->buffersize;
 	FILE *file;
 	unsigned char *ps, *pc;
 	int sizein;
-	char *name = get_filename ();
+	char *name = get_filename (dev);
 
 	if (!name)
 		return 1;
@@ -202,7 +204,7 @@ static void usage ()
 
 int main (int argc, char **argv)
 {
-	int (*save_picture) (unsigned char *, int);
+	int (*save_picture) (V4l2Device *);
 	V4l2Device device;
 	int ret;
 	int c;
@@ -397,8 +399,7 @@ int main (int argc, char **argv)
 						/* Now we got a pic. It must be adjusted
 						 * and sent to a file.
 						 */
-						if (!save_picture (device.framebuffer,
-							device.buffersize))
+						if (!save_picture (&device))
 						{
 							fprintf (stderr,
 								"[%d] Done!\n",
