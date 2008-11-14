@@ -30,6 +30,7 @@
 #include <ctype.h>
 #include "device.h"
 #include "huffman.h"
+#include <jpeglib.h>
 
 #define TIMEOUT 1000
 #define DEFAULT_FPS 20
@@ -100,6 +101,54 @@ static int raw_save_picture (V4l2Device *dev)
 
 	free (name);
 	return 0;
+}
+
+static int jpegcode_save_image (ImageBuffer *image, FILE *file)
+{
+	struct jpeg_compress_struct compress;
+	struct jpeg_error_mgr emgr;
+	int i;
+	JSAMPROW p;
+	compress.err = jpeg_std_error (&emgr);
+	jpeg_create_compress (&compress);
+	compress.in_color_space = JCS_YCbCr;
+	jpeg_set_defaults (&compress);
+	jpeg_stdio_dest (&compress, file);
+	compress.image_width = image->fmt.width;
+	compress.image_height = image->fmt.height;
+	compress.input_components = 3;
+	jpeg_start_compress (&compress, TRUE);
+	p = (JSAMPROW) image->data;
+	for (i = 0; i < image->fmt.height; i++)
+	{
+		jpeg_write_scanlines (&compress, &p, 1);
+		p += image->fmt.bytesperline;
+	}
+	jpeg_finish_compress (&compress);
+	return 0;
+}
+
+static int jpegcode_save_picture (V4l2Device *dev)
+{
+	int r;
+	FILE *file;
+	char *name = get_filename (dev);
+	if (!name)
+		return 1;
+	file = fopen (name, "wb");
+
+	if (file == NULL)
+	{
+		free (name);
+		return 1;
+	}
+
+	r = jpegcode_save_image (&dev->image, file);
+
+	fclose (file);
+
+	free (name);
+	return r;
 }
 
 static int mjpeg_save_picture (V4l2Device *dev)
@@ -289,6 +338,9 @@ int main (int argc, char **argv)
 	{
 		case V4L2_PIX_FMT_MJPEG:
 			save_picture = mjpeg_save_picture;
+			break;
+		case V4L2_PIX_FMT_YUV420:
+			save_picture = jpegcode_save_picture;
 			break;
 		default:
 			save_picture = raw_save_picture;
