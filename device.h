@@ -44,6 +44,12 @@ typedef enum {
 } DeviceErrors;
 
 typedef struct {
+  unsigned char * data;
+  size_t len;
+  struct v4l2_pix_format fmt;
+} ImageBuffer;
+
+typedef struct {
 	void *start;
 	size_t length;
 } DeviceBuffer;
@@ -56,11 +62,10 @@ typedef struct {
 	char *prefix;
 	DeviceBuffer *buffer;
 	int n_buffers;
-	int buffersize;
 	int fps;
-	unsigned char *framebuffer;
 	struct v4l2_capability device_capability;
 	u_int32_t pixelformat;
+	ImageBuffer image;
 } V4l2Device;
 
 int device_open (V4l2Device *dev);

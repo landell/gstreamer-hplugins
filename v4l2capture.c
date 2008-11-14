@@ -95,7 +95,7 @@ static int raw_save_picture (V4l2Device *dev)
 		return 1;
 	}
 
-	fwrite (dev->framebuffer, dev->buffersize, 1, file);
+	fwrite (dev->image.data, dev->image.len, 1, file);
 	fclose (file);
 
 	free (name);
@@ -104,8 +104,8 @@ static int raw_save_picture (V4l2Device *dev)
 
 static int mjpeg_save_picture (V4l2Device *dev)
 {
-	unsigned char *buf = dev->framebuffer;
-	int size = dev->buffersize;
+	unsigned char *buf = dev->image.data;
+	int size = dev->image.len;
 	FILE *file;
 	unsigned char *ps, *pc;
 	int sizein;

@@ -43,7 +43,7 @@
 int device_open (V4l2Device *dev)
 {
 	dev->buffer = NULL;
-	dev->framebuffer = NULL;
+	dev->image.data = NULL;
 
 	if ((dev->fd = open (dev->name, O_RDWR | O_NONBLOCK, 0)) < 0)
 		return DEVICE_INVALID;
@@ -59,15 +59,6 @@ int device_open (V4l2Device *dev)
 	{
 		close (dev->fd);
 		return DEVICE_DONT_CAPTURE;
-	}
-
-	dev->buffersize = dev->width * dev->height * 2;
-	dev->framebuffer = malloc(dev->buffersize);
-
-	if (dev->framebuffer == NULL)
-	{
-		close (dev->fd);
-		return DEVICE_OUT_OF_MEMORY;
 	}
 
 	return DEVICE_OK;
@@ -108,6 +99,8 @@ int device_init (V4l2Device *dev)
 	if ((image_format.fmt.pix.width != dev->width) ||
 		(image_format.fmt.pix.height != dev->height)) 
 		return DEVICE_INVALID_FORMAT;
+
+	dev->image.fmt = image_format.fmt.pix;
 
         /* Buggy driver paranoia. */
 	min = image_format.fmt.pix.width * 2;
@@ -231,9 +224,14 @@ int device_getframe (V4l2Device *dev)
 	if (buf.bytesused <= MIN_HEADER)
 		return DEVICE_EMPTY_FRAME;
 
-	memcpy (dev->framebuffer, dev->buffer[buf.index].start,
+	dev->image.len = buf.bytesused;
+	if (dev->image.data)
+		free (dev->image.data);
+	dev->image.data = malloc (buf.bytesused);
+	if (dev->image.data == NULL)
+		return DEVICE_OUT_OF_MEMORY;
+	memcpy (dev->image.data, dev->buffer[buf.index].start,
 		buf.bytesused);
-	dev->buffersize = buf.bytesused;
 
 	if (ioctl (dev->fd, VIDIOC_QBUF, &buf) < 0)
 		return DEVICE_BUFFER_ERROR;
@@ -257,8 +255,8 @@ int device_close (V4l2Device *dev)
 {
 	/* TODO: Free allocated buffers before close device. */
 
-	if (dev->framebuffer)
-		free (dev->framebuffer);
+	if (dev->image.data)
+		free (dev->image.data);
 	if (dev->buffer)
 	{
 		int i;
