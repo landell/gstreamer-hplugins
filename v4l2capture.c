@@ -384,97 +384,103 @@ int main (int argc, char **argv)
 					"Unknown or not handled error.\n");
 				break;
 		}
-	} else
-	{
-		ret = device_start_capture (&device);
-		
-		switch (ret)
+
+		if (device_close (&device) != DEVICE_OK)
 		{
-			case DEVICE_BUFFER_ERROR:
-				fprintf (stderr,
-					"Could not start the stream.\n");
-				break;
-			case DEVICE_STREAM_ERROR:
-				fprintf (stderr,
-					"Error on start streaming.\n");
-				break;
-		} 
-		
-		if (ret == DEVICE_OK)
-		{		
-			fprintf (stderr, "Taking a picture...\n");
+			fprintf (stderr, "Closing device error.\n");
+			exit (1);
+		}
 
-			fd_set fdset;
-                        struct timeval timeout;
+	}
 
-                        FD_ZERO (&fdset);
-                        FD_SET (device.fd, &fdset);
+	ret = device_start_capture (&device);
 
-                        timeout.tv_sec = 0;
-                        timeout.tv_usec = wait_time * 1000;
+	switch (ret)
+	{
+		case DEVICE_BUFFER_ERROR:
+			fprintf (stderr,
+				"Could not start the stream.\n");
+			break;
+		case DEVICE_STREAM_ERROR:
+			fprintf (stderr,
+				"Error on start streaming.\n");
+			break;
+	} 
 
-                        int i; 
-			for (i = 0; i < retries; ++i)
+	if (ret == DEVICE_OK)
+	{		
+		fprintf (stderr, "Taking a picture...\n");
+
+		fd_set fdset;
+		struct timeval timeout;
+		int i; 
+
+		FD_ZERO (&fdset);
+		FD_SET (device.fd, &fdset);
+
+		timeout.tv_sec = 0;
+		timeout.tv_usec = wait_time * 1000;
+
+		for (i = 0; i < retries; ++i)
+		{
+			ret = select (device.fd + 1, &fdset, NULL, NULL,
+				&timeout);
+
+			if (ret == 0)
 			{
-				ret = select (device.fd + 1, &fdset, NULL, NULL,
-					&timeout);
+				fprintf (stderr,
+					"[%d] Timeout.\n", i);
+			} else if (ret == -1)
+			{
+				fprintf (stderr,
+					"[%d] I got an error: %s\n",
+					i, strerror (errno));
+			} else
+			{
+				ret = device_getframe (&device);
 
-				if (ret == 0)
+				switch (ret)
 				{
-					fprintf (stderr,
-						"[%d] Timeout.\n", i);
-				} else if (ret == -1)
-				{
-					fprintf (stderr,
-						"[%d] I got an error: %s\n",
-						i, strerror (errno));
-				} else
-				{
-					ret = device_getframe (&device);
+					case DEVICE_NOT_READY:
+						fprintf (stderr,
+							"NOT READY\n");
+						break;
+					case DEVICE_EMPTY_FRAME:
+						fprintf (stderr, 
+							"EMPTY FRAME\n");
+						break;
+					case DEVICE_STREAM_ERROR:
+						fprintf (stderr,
+							"STREAM ERROR\n");
+						break;
+					case DEVICE_BUFFER_ERROR:
+						fprintf (stderr,
+						"BUFFER ERROR\n");
+						break;
+				}
 
-					switch (ret)
+				if (ret == DEVICE_OK)
+				{
+					/* Now we got a pic. It must be adjusted
+					 * and sent to a file.
+					 */
+					if (!save_picture (&device, save_image))
 					{
-						case DEVICE_NOT_READY:
-							fprintf (stderr,
-								"NOT READY\n");
-							break;
-						case DEVICE_EMPTY_FRAME:
-							fprintf (stderr, 
-								"EMPTY FRAME\n");
-							break;
-						case DEVICE_STREAM_ERROR:
-							fprintf (stderr,
-								"STREAM ERROR\n");
-							break;
-						case DEVICE_BUFFER_ERROR:
-							fprintf (stderr,
-							"BUFFER ERROR\n");
-							break;
-					}
-
-					if (ret == DEVICE_OK)
-					{
-						/* Now we got a pic. It must be adjusted
-						 * and sent to a file.
-						 */
-						if (!save_picture (&device, save_image))
-						{
-							fprintf (stderr,
-								"[%d] Done!\n",
-								i);
-							break;
-						} else
-							fprintf (stderr,
-								"[%d] I cannot save this image!\n",
-								i);
-					}
+						fprintf (stderr,
+							"[%d] Done!\n",
+							i);
+						break;
+					} else
+						fprintf (stderr,
+							"[%d] I cannot save this image!\n",
+							i);
 				}
 			}
 		}
-
-		if (device_stop_capture (&device) != DEVICE_OK)
-			fprintf (stderr, "Error on stop streaming.\n");
 	}
+
+	if (device_stop_capture (&device) != DEVICE_OK)
+		fprintf (stderr, "Error on stop streaming.\n");
 
 	if (device_close (&device) != DEVICE_OK)
 	{
