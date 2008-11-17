@@ -30,6 +30,7 @@
 #include <ctype.h>
 #include "device.h"
 #include "huffman.h"
+#include "hcverror.h"
 #include <jpeglib.h>
 
 #define TIMEOUT 1000
@@ -260,6 +261,11 @@ int main (int argc, char **argv)
 	V4l2Device device;
 	int ret;
 	int c;
+
+	fd_set fdset;
+	struct timeval timeout;
+	int i; 
+
 	u_int32_t formats[] =
 	{
 		V4L2_PIX_FMT_MJPEG,
@@ -317,9 +323,10 @@ int main (int argc, char **argv)
 	fprintf (stderr, "Image resolution: %dx%d\n", device.width,
 		device.height);
 
-	if (device_open (&device) != DEVICE_OK)
+	if ((ret = device_open (&device)) != DEVICE_OK)
 	{
-		fprintf (stderr, "Invalid Device: %s\n", device.name);
+		fprintf (stderr, "Could not open device: %s\n",
+			device_error (ret));
 		exit (1);	
 	}	
 
@@ -355,136 +362,86 @@ int main (int argc, char **argv)
 	ret = device_init (&device);
 	if (ret != DEVICE_OK)
 	{	
-		switch (ret)
+		fprintf (stderr, "Could not initialize device: %s\n",
+			device_error (ret));
+		if ((ret = device_close (&device)) != DEVICE_OK)
 		{
-			case DEVICE_IS_NOT_V4L2:
-				fprintf (stderr,
-					"Device %s is not a V4l2 device.\n",
-					device.name);
-				break;
-			case DEVICE_DONT_CAPTURE:
-				fprintf (stderr,
-					"Device %s does not support video capture.\n",
-					device.name); 
-				break;
-			case DEVICE_MODE_NOT_SUPPORTED:
-				fprintf (stderr,
-					"Device %s does not support MMAP.\n",
-					device.name);
-				break;
-			case DEVICE_INVALID_FORMAT:
-				fprintf (stderr, "Invalid image format: %s\n",
-					res_code);
-				break;
-			case DEVICE_OUT_OF_MEMORY:
-				fprintf (stderr, "Out of memory!\n");
-				break;
-			default:
-				fprintf (stderr,
-					"Unknown or not handled error.\n");
-				break;
+			fprintf (stderr, "Could not close device: %s\n",
+				device_error (ret));
 		}
-
-		if (device_close (&device) != DEVICE_OK)
-		{
-			fprintf (stderr, "Closing device error.\n");
-			exit (1);
-		}
-
+		exit (1);
 	}
 
 	ret = device_start_capture (&device);
-
-	switch (ret)
-	{
-		case DEVICE_BUFFER_ERROR:
-			fprintf (stderr,
-				"Could not start the stream.\n");
-			break;
-		case DEVICE_STREAM_ERROR:
-			fprintf (stderr,
-				"Error on start streaming.\n");
-			break;
-	} 
-
-	if (ret == DEVICE_OK)
-	{		
-		fprintf (stderr, "Taking a picture...\n");
-
-		fd_set fdset;
-		struct timeval timeout;
-		int i; 
-
-		FD_ZERO (&fdset);
-		FD_SET (device.fd, &fdset);
-
-		timeout.tv_sec = 0;
-		timeout.tv_usec = wait_time * 1000;
-
-		for (i = 0; i < retries; ++i)
+	if (ret != DEVICE_OK)
+	{	
+		fprintf (stderr, "Could not start capture: %s\n",
+			device_error (ret));
+		if ((ret = device_close (&device)) != DEVICE_OK)
 		{
-			ret = select (device.fd + 1, &fdset, NULL, NULL,
-				&timeout);
+			fprintf (stderr, "Could not close device: %s\n",
+				device_error (ret));
+		}
+		exit (1);
+	}
 
-			if (ret == 0)
-			{
-				fprintf (stderr,
-					"[%d] Timeout.\n", i);
-			} else if (ret == -1)
-			{
-				fprintf (stderr,
-					"[%d] I got an error: %s\n",
-					i, strerror (errno));
+	fprintf (stderr, "Taking a picture...\n");
+
+	FD_ZERO (&fdset);
+	FD_SET (device.fd, &fdset);
+
+	timeout.tv_sec = 0;
+	timeout.tv_usec = wait_time * 1000;
+
+	for (i = 0; i < retries; ++i)
+	{
+		ret = select (device.fd + 1, &fdset, NULL, NULL,
+			&timeout);
+
+		if (ret == 0)
+		{
+			fprintf (stderr,
+				"[%d] Timeout.\n", i);
+		} else if (ret == -1)
+		{
+			fprintf (stderr,
+				"[%d] I got an error: %s\n",
+				i, strerror (errno));
+		} else
+		{
+			ret = device_getframe (&device);
+
+			if (ret != DEVICE_OK)
+			{	
+				fprintf (stderr, "Could not start capture: %s\n",
+					device_error (ret));
 			} else
 			{
-				ret = device_getframe (&device);
-
-				switch (ret)
+				/* Now we got a pic. It must be adjusted
+				 * and sent to a file.
+				 */
+				if (!save_picture (&device, save_image))
 				{
-					case DEVICE_NOT_READY:
-						fprintf (stderr,
-							"NOT READY\n");
-						break;
-					case DEVICE_EMPTY_FRAME:
-						fprintf (stderr, 
-							"EMPTY FRAME\n");
-						break;
-					case DEVICE_STREAM_ERROR:
-						fprintf (stderr,
-							"STREAM ERROR\n");
-						break;
-					case DEVICE_BUFFER_ERROR:
-						fprintf (stderr,
-						"BUFFER ERROR\n");
-						break;
-				}
-
-				if (ret == DEVICE_OK)
-				{
-					/* Now we got a pic. It must be adjusted
-					 * and sent to a file.
-					 */
-					if (!save_picture (&device, save_image))
-					{
-						fprintf (stderr,
-							"[%d] Done!\n",
-							i);
-						break;
-					} else
-						fprintf (stderr,
-							"[%d] I cannot save this image!\n",
-							i);
-				}
+					fprintf (stderr,
+						"[%d] Done!\n",
+						i);
+					break;
+				} else
+					fprintf (stderr,
+						"[%d] I cannot save this image!\n",
+						i);
 			}
 		}
 	}
 
-	if (device_stop_capture (&device) != DEVICE_OK)
-		fprintf (stderr, "Error on stop streaming.\n");
+	if ((ret = device_stop_capture (&device)) != DEVICE_OK)
+		fprintf (stderr, "Error on stop streaming: %s\n",
+			device_error (ret));
 
 	if (device_close (&device) != DEVICE_OK)
 	{
-		fprintf (stderr, "Closing device error.\n");
+		fprintf (stderr, "Could not close device: %s\n",
+			device_error (ret));
 		exit (1);
 	}
 
