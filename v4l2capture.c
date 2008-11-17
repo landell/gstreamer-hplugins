@@ -146,25 +146,32 @@ static int yuyv_save_image (ImageBuffer *image, FILE *file)
 
 }
 
-int save_picture (V4l2Device *dev)
+int save_image_name (int save_image (ImageBuffer *, FILE *),
+	ImageBuffer *image, char *name)
 {
 	int r;
 	FILE *file;
-	char *name = get_filename (dev);
-	if (!name)
-		return 1;
 	file = fopen (name, "wb");
 
 	if (file == NULL)
 	{
-		free (name);
 		return 1;
 	}
 
-	r = dev->save_image (&dev->image, file);
+	r = save_image (image, file);
 
 	fclose (file);
 
+	return r;
+}
+
+int save_picture (V4l2Device *device)
+{
+	int r;
+	char *name = get_filename (device);
+	if (!name)
+		return 1;
+	r = save_image_name (device->save_image, &device->image, name);
 	free (name);
 	return r;
 }
