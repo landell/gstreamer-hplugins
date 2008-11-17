@@ -31,18 +31,16 @@
 #include "device.h"
 #include "huffman.h"
 #include "hcverror.h"
+#include "hcvloop.h"
 #include <jpeglib.h>
 
 #define TIMEOUT 1000
 #define DEFAULT_FPS 20
-#define DEFAULT_RETRIES 3
 
 static int list_res;
 static char *res_code = "320x240";
 static char *file_prefix = "image";
 static char *device_name = "/dev/video0";
-static int wait_time = TIMEOUT;
-static int retries = DEFAULT_RETRIES;
 
 /* JPEG Utils */
 
@@ -148,8 +146,7 @@ static int yuyv_save_image (ImageBuffer *image, FILE *file)
 
 }
 
-static int save_picture (V4l2Device *dev,
-			 int (*save_image) (ImageBuffer *, FILE *))
+int save_picture (V4l2Device *dev)
 {
 	int r;
 	FILE *file;
@@ -164,7 +161,7 @@ static int save_picture (V4l2Device *dev,
 		return 1;
 	}
 
-	r = save_image (&dev->image, file);
+	r = dev->save_image (&dev->image, file);
 
 	fclose (file);
 
@@ -250,21 +247,14 @@ static void usage ()
 	"[-r resolution (320x240)] "
 	"[-o output_prefix (image)] "
 	"[-d device_name (/dev/video0)] "
-	"[-t timeout per frame in ms (1000)] "
-	"[-e number of retries (3)] "
 	"[-h this help]\n");
 }
 
 int main (int argc, char **argv)
 {
-	int (*save_image) (ImageBuffer *, FILE *);
 	V4l2Device device;
 	int ret;
 	int c;
-
-	fd_set fdset;
-	struct timeval timeout;
-	int i; 
 
 	u_int32_t formats[] =
 	{
@@ -273,7 +263,7 @@ int main (int argc, char **argv)
 		0
 	};
 
-	while ((c = getopt (argc, argv, "l:r:o:d:t:e:h")) != -1)
+	while ((c = getopt (argc, argv, "l:r:o:d:h")) != -1)
 	{
 		switch (c)
 		{
@@ -289,12 +279,6 @@ int main (int argc, char **argv)
 			case 'd':
 				device_name = optarg;
 				break;
-			case 'e':
-				retries = strtol (optarg, NULL, 10);
-				break;
-			case 't':
-				wait_time = strtol (optarg, NULL, 10);
-				break;
 			case '?':
 			case 'h':
 			default:
@@ -306,12 +290,6 @@ int main (int argc, char **argv)
 	device.name = device_name;
 	device.prefix = file_prefix;
 	device.fps = DEFAULT_FPS;
-
-	if (wait_time == 0)
-		wait_time = TIMEOUT;
-
-	if (retries == 0)
-		retries = DEFAULT_RETRIES;
 
 	if (get_resolution (res_code, &device.width, &device.height))
 	{
@@ -347,16 +325,16 @@ int main (int argc, char **argv)
 	switch (device.pixelformat)
 	{
 		case V4L2_PIX_FMT_MJPEG:
-			save_image = mjpeg_save_image;
+			device.save_image = mjpeg_save_image;
 			break;
 		case V4L2_PIX_FMT_YUV420:
-			save_image = jpegcode_save_image;
+			device.save_image = jpegcode_save_image;
 			break;
 		case V4L2_PIX_FMT_YUYV:
-			save_image = yuyv_save_image;
+			device.save_image = yuyv_save_image;
 			break;
 		default:
-			save_image = raw_save_image;
+			device.save_image = raw_save_image;
 	}
 	
 	ret = device_init (&device);
@@ -386,53 +364,7 @@ int main (int argc, char **argv)
 	}
 
 	fprintf (stderr, "Taking a picture...\n");
-
-	FD_ZERO (&fdset);
-	FD_SET (device.fd, &fdset);
-
-	timeout.tv_sec = 0;
-	timeout.tv_usec = wait_time * 1000;
-
-	for (i = 0; i < retries; ++i)
-	{
-		ret = select (device.fd + 1, &fdset, NULL, NULL,
-			&timeout);
-
-		if (ret == 0)
-		{
-			fprintf (stderr,
-				"[%d] Timeout.\n", i);
-		} else if (ret == -1)
-		{
-			fprintf (stderr,
-				"[%d] I got an error: %s\n",
-				i, strerror (errno));
-		} else
-		{
-			ret = device_getframe (&device);
-
-			if (ret != DEVICE_OK)
-			{	
-				fprintf (stderr, "Could not start capture: %s\n",
-					device_error (ret));
-			} else
-			{
-				/* Now we got a pic. It must be adjusted
-				 * and sent to a file.
-				 */
-				if (!save_picture (&device, save_image))
-				{
-					fprintf (stderr,
-						"[%d] Done!\n",
-						i);
-					break;
-				} else
-					fprintf (stderr,
-						"[%d] I cannot save this image!\n",
-						i);
-			}
-		}
-	}
+	device_loop (&device);
 
 	if ((ret = device_stop_capture (&device)) != DEVICE_OK)
 		fprintf (stderr, "Error on stop streaming: %s\n",

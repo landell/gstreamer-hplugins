@@ -24,6 +24,7 @@
 #ifndef _V4L2_DEVICE_H_
 #define _V4L2_DEVICE_H_
 
+#include <stdio.h>
 #include <sys/types.h>
 #include <linux/videodev2.h>
 
@@ -66,6 +67,7 @@ typedef struct {
 	struct v4l2_capability device_capability;
 	u_int32_t pixelformat;
 	ImageBuffer image;
+	int (*save_image) (ImageBuffer *, FILE *);
 } V4l2Device;
 
 int device_open (V4l2Device *dev);
