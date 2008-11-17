@@ -18,6 +18,10 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <sys/select.h>
 #include "hcvloop.h"
 #include "hcverror.h"
 #include "device.h"
@@ -25,10 +29,26 @@
 void device_loop (V4l2Device *device)
 {
 	DeviceErrors ret;
-	while ((ret = device_getframe (device)) == DEVICE_NOT_READY);
-	if (ret != DEVICE_OK)
-		fprintf (stderr, "Could not get frame: %s\n",
-			device_error (ret));
+	fd_set fds;
+	int r;
+	FD_ZERO (&fds);
+	FD_SET (device->fd, &fds);
+	r = select (device->fd + 1, &fds, NULL, NULL, NULL);
+	if (r == -1)
+	{
+		fprintf (stderr, "Error on select: %s\n", strerror (errno));
+	}
+	else if (r == 0)
+	{
+		return;
+	}
 	else
-		save_picture (device);
+	{
+		ret = device_getframe (device);
+		if (ret != DEVICE_OK)
+			fprintf (stderr, "Could not get frame: %s\n",
+				device_error (ret));
+		else
+			save_picture (device);
+	}
 }
