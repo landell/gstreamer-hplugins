@@ -34,13 +34,9 @@ void device_loop (V4l2Device *device)
 	FD_ZERO (&fds);
 	FD_SET (device->fd, &fds);
 	r = select (device->fd + 1, &fds, NULL, NULL, NULL);
-	if (r == -1)
+	if (r == -1 || r == 0)
 	{
 		fprintf (stderr, "Error on select: %s\n", strerror (errno));
-	}
-	else if (r == 0)
-	{
-		return;
 	}
 	else
 	{
@@ -48,7 +44,8 @@ void device_loop (V4l2Device *device)
 		if (ret != DEVICE_OK)
 			fprintf (stderr, "Could not get frame: %s\n",
 				device_error (ret));
-		else
-			save_picture (device);
+		else if ((ret = save_picture (device)) != DEVICE_OK)
+			fprintf (stderr, "Coult not save frame: %s\n",
+				device_error (ret));
 	}
 }
