@@ -50,6 +50,32 @@ static void enqueue_image (ImageBuffer *image)
 	queue.top = INCQUEUE (queue.top);
 }
 
+static char * filenamenumber (char *prefix, int n)
+{
+	char *name = malloc (strlen (prefix) + 32);
+	if (!name)
+		return NULL;
+	sprintf (name, "%s%d.jpg", prefix, n);
+	return name;
+}
+
+static void save_queue (V4l2Device *device)
+{
+	int i;
+	char *name;
+	ImageBuffer *image;
+	fprintf (stderr, "Saving images...\n");
+	for (i = QUEUE_SIZE; i > 0; i--)
+	{
+		name = filenamenumber (device->prefix, i);
+		image = &queue.buffers[(i + queue.top) % QUEUE_SIZE];
+		if (name != NULL && image->data != NULL && image->len != 0)
+			save_image_name (device->save_image, image, name);
+		if (name != NULL)
+			free (name);
+	}
+}
+
 void device_loop (V4l2Device *device)
 {
 	DeviceErrors ret;
