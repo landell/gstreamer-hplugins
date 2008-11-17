@@ -26,26 +26,53 @@
 #include "hcverror.h"
 #include "device.h"
 
+#define QUEUE_SIZE 16
+
+struct
+{
+  ImageBuffer buffers[QUEUE_SIZE];
+  int top;
+} queue =
+{
+  .top = 0
+};
+
+#define INCQUEUE(x) (((x) + 1) % QUEUE_SIZE)
+
+static void enqueue_image (ImageBuffer *image)
+{
+	if (queue.buffers[queue.top].data)
+		free (queue.buffers[queue.top].data);
+	queue.buffers[queue.top].data = malloc (image->len);
+	memcpy (queue.buffers[queue.top].data, image->data, image->len);
+	queue.buffers[queue.top].len = image->len;
+	queue.buffers[queue.top].fmt = image->fmt;
+	queue.top = INCQUEUE (queue.top);
+}
+
 void device_loop (V4l2Device *device)
 {
 	DeviceErrors ret;
 	fd_set fds;
 	int r;
-	FD_ZERO (&fds);
-	FD_SET (device->fd, &fds);
-	r = select (device->fd + 1, &fds, NULL, NULL, NULL);
-	if (r == -1 || r == 0)
+	while (1)
 	{
-		fprintf (stderr, "Error on select: %s\n", strerror (errno));
-	}
-	else
-	{
-		ret = device_getframe (device);
-		if (ret != DEVICE_OK)
-			fprintf (stderr, "Could not get frame: %s\n",
-				device_error (ret));
-		else if ((ret = save_picture (device)) != DEVICE_OK)
-			fprintf (stderr, "Coult not save frame: %s\n",
-				device_error (ret));
+		FD_ZERO (&fds);
+		FD_SET (device->fd, &fds);
+		r = select (device->fd + 1, &fds, NULL, NULL, NULL);
+		if (r == -1 || r == 0)
+		{
+			fprintf (stderr, "Error on select: %s\n",
+				strerror (errno));
+		}
+		else
+		{
+			ret = device_getframe (device);
+			if (ret != DEVICE_OK)
+				fprintf (stderr, "Could not get frame: %s\n",
+					device_error (ret));
+			else
+				enqueue_image (&device->image);
+		}
 	}
 }
