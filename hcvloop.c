@@ -22,6 +22,9 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <unistd.h>
 #include "hcvloop.h"
 #include "hcverror.h"
 #include "device.h"
@@ -76,22 +79,53 @@ static void save_queue (V4l2Device *device)
 	}
 }
 
+static int hcv_server (void)
+{
+	int fd;
+	struct sockaddr_un saddr;
+	socklen_t slen;
+	fd = socket (PF_UNIX, SOCK_DGRAM, 0);
+	if (fd < 0)
+		return -1;
+	saddr.sun_family = AF_UNIX;
+	strcpy (saddr.sun_path, "/var/run/hcv/local");
+	slen = sizeof (struct sockaddr) + strlen (saddr.sun_path) + 1;
+	unlink (saddr.sun_path);
+	if (bind (fd, (struct sockaddr *) &saddr, slen) < 0)
+	{
+		close (fd);
+		return -1;
+	}
+	return fd;
+}
+
+#ifndef MAX
+#define MAX(x,y) (((x) > (y)) ? (x) : (y))
+#endif
+
 void device_loop (V4l2Device *device)
 {
 	DeviceErrors ret;
 	fd_set fds;
+	int sfd;
+	int max_fd;
 	int r;
+	sfd = hcv_server ();
+	if (sfd < 0)
+		return;
+	max_fd = MAX (sfd, device->fd);
 	while (1)
 	{
 		FD_ZERO (&fds);
 		FD_SET (device->fd, &fds);
-		r = select (device->fd + 1, &fds, NULL, NULL, NULL);
+		FD_SET (sfd, &fds);
+		r = select (max_fd + 1, &fds, NULL, NULL, NULL);
 		if (r == -1 || r == 0)
 		{
 			fprintf (stderr, "Error on select: %s\n",
 				strerror (errno));
 		}
-		else
+		if (FD_ISSET (device->fd, &fds))
 		{
 			ret = device_getframe (device);
 			if (ret != DEVICE_OK)
@@ -99,6 +133,10 @@ void device_loop (V4l2Device *device)
 					device_error (ret));
 			else
 				enqueue_image (&device->image);
+		}
+		if (FD_ISSET (sfd, &fds))
+		{
+			save_queue (device);
 		}
 	}
 }
