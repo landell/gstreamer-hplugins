@@ -105,6 +105,7 @@ static int hcv_server (void)
 
 void device_loop (V4l2Device *device)
 {
+	char sbuf[128];
 	DeviceErrors ret;
 	fd_set fds;
 	int sfd;
@@ -136,6 +137,7 @@ void device_loop (V4l2Device *device)
 		}
 		if (FD_ISSET (sfd, &fds))
 		{
+			read (sfd, sbuf, sizeof (sbuf));
 			save_queue (device);
 		}
 	}
