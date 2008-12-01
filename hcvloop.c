@@ -111,6 +111,7 @@ void device_loop (V4l2Device *device)
 	int sfd;
 	int max_fd;
 	int r;
+	int countdown = -1;
 	sfd = hcv_server ();
 	if (sfd < 0)
 		return;
@@ -138,6 +139,10 @@ void device_loop (V4l2Device *device)
 		if (FD_ISSET (sfd, &fds))
 		{
 			read (sfd, sbuf, sizeof (sbuf));
+			countdown = QUEUE_SIZE / 2;
+		}
+		if (countdown > -1 && countdown-- == 0)
+		{
 			save_queue (device);
 		}
 	}
