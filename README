@@ -25,7 +25,7 @@ supported by a v4l2 compliant driver. It provide a simple interface and
 flexible parammeters to well suit on shell scripts.
 
 V4l2 capture was mostly tested with UVC cameras. By now, v4l2capture
-support only devices that provide MJPEG/JPEG streams.
+support devices that provide MJPEG/JPEG and RAW streams.
 
 
 2. Credits
@@ -58,12 +58,9 @@ Running with parameters, v4l2capture will try take a 320x240 image from
 
 5. Issues
 
-For now, v4l2capture was tested only with uvc devices that support MJPEG
-streamming.
-
 Some USB devices switches their own modes depending on USB speed. So, a
-USB 2.0 camera that don't support MJPEG maybe can do it if plugged on a
-USB 1.1 host or if the ehci linux module has been removed (rmmod
-ehci-hcd).
+USB 2.0 camera that don't support MJPEG in high speed mode maybe can do
+it if plugged on a full speed host or if the ehci linux module has been
+removed (rmmod ehci-hcd).
 
 --
