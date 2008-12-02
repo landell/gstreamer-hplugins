@@ -50,7 +50,11 @@ int main (int argc, char **argv)
 	int sfd;
 	sfd = hcv_client ();
 	if (sfd < 0)
+	{
+		fprintf(stderr,
+			"Signal not sent. Is v4l2capture running as daemon?\n");
 		return 1;
+	}
 	write (sfd, "\n", 1);
 	close (sfd);
 	return 0;
