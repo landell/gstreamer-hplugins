@@ -30,7 +30,8 @@ support only devices that provide MJPEG/JPEG streams.
 
 2. Credits
 
-v4l2capture author - Samuel R. C. Vale <srcvale@holoscopio.com>
+v4l2capture authors - Samuel R. C. Vale <srcvale@holoscopio.com> and
+Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>.
 
 v4l2capture was based on V4l2 documentation, and some parts of luvcview
 (Copyright 2005 2006 2007 Laurent Pinchart, Michel, Xhaard, and 2006
