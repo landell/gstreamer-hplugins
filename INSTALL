@@ -1,0 +1,6 @@
+INSTALL
+
+The default path for instalation is /usr/bin. To install v4l2capture
+automatically, use:
+
+# make install
