@@ -11,7 +11,7 @@ all: v4l2capture client
 	$(CC) -c -o $@ $<
 
 client: client.o
-	$(CC) -o client client.o
+	$(CC) -o v4l2capture-client client.o
 
 v4l2capture: $(OBJECTS)
 	$(CC) -o v4l2capture $(OBJECTS) $(LIBS)
