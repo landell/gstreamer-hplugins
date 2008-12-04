@@ -25,6 +25,6 @@
 
 int save_picture (V4l2Device *);
 int save_image_name (int (ImageBuffer *, FILE *), ImageBuffer *, char *);
-void device_loop (V4l2Device *);
+int device_loop (V4l2Device *);
 
 #endif

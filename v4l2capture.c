@@ -371,7 +371,11 @@ int main (int argc, char **argv)
 	}
 
 	fprintf (stderr, "Taking a picture...\n");
-	device_loop (&device);
+	if (device_loop (&device) != 0)
+	{
+		fprintf (stderr, "Error on frame capture. "
+			"Do you have the correct permissions?\n");
+	}
 
 	if ((ret = device_stop_capture (&device)) != DEVICE_OK)
 		fprintf (stderr, "Error on stop streaming: %s\n",

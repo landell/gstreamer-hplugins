@@ -103,7 +103,7 @@ static int hcv_server (void)
 #define MAX(x,y) (((x) > (y)) ? (x) : (y))
 #endif
 
-void device_loop (V4l2Device *device)
+int device_loop (V4l2Device *device)
 {
 	char sbuf[128];
 	DeviceErrors ret;
@@ -114,7 +114,7 @@ void device_loop (V4l2Device *device)
 	int countdown = -1;
 	sfd = hcv_server ();
 	if (sfd < 0)
-		return;
+		return -1;
 	max_fd = MAX (sfd, device->fd);
 	while (1)
 	{
