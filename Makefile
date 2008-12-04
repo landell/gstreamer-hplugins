@@ -18,6 +18,7 @@ v4l2capture: $(OBJECTS)
 
 install:
 	cp v4l2capture /usr/bin/
+	mkdir /var/run/hcv
 
 clean:
 	rm -f v4l2capture $(OBJECTS) client client.o
