@@ -23,6 +23,7 @@ install:
 	cp v4l2capture-client $(INSTALL_DIR)
 	mkdir -p $(RUNTIME_DIR)
 	chown root.video $(RUNTIME_DIR)
+	chmod 775 $(RUNTIME_DIR)
 
 clean:
 	rm -f v4l2capture $(OBJECTS) client client.o
