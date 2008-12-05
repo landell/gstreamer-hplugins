@@ -26,4 +26,4 @@ install:
 	chmod 775 $(RUNTIME_DIR)
 
 clean:
-	rm -f v4l2capture $(OBJECTS) client client.o
+	rm -f v4l2capture $(OBJECTS) v4l2capture-client client.o
