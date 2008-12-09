@@ -251,10 +251,11 @@ static int get_resolution (char *res, int *w, int *h)
 static void usage ()
 {
   fprintf (stderr, "v4l2capture - Grab images from a V4L2 Device\n"
-	"[-r resolution (320x240)] "
-	"[-o output_prefix (image)] "
-	"[-d device_name (/dev/video0)] "
-	"[-h this help]\n");
+	"Parameters:\n"
+	"-r resolution	Image resolution WxH (default: 320x240)\n"
+	"-o prefix	Output prefix (default: ./image)\n"
+	"-d device	Path to device (default: /dev/video0)\n"
+	"-h		Show this help\n");
 }
 
 int main (int argc, char **argv)
