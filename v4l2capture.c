@@ -36,6 +36,7 @@
 
 #define TIMEOUT 1000
 #define DEFAULT_FPS 20
+#define NFRAMES 10
 
 static int list_res;
 static char *res_code = "320x240";
@@ -255,7 +256,8 @@ static void usage ()
 	"-r resolution	Image resolution WxH (default: 320x240)\n"
 	"-o prefix	Output prefix (default: ./image)\n"
 	"-d device	Path to device (default: /dev/video0)\n"
-	"-h		Show this help\n");
+	"-n number	Number of frames to take (max: %d, default: %d)\n"
+	"-h		Show this help\n", MAX_QUEUE_SIZE, NFRAMES);
 }
 
 int main (int argc, char **argv)
@@ -263,6 +265,8 @@ int main (int argc, char **argv)
 	V4l2Device device;
 	int ret;
 	int c;
+	int nframes = NFRAMES;
+	char *nframes_aux;
 
 	u_int32_t formats[] =
 	{
@@ -271,7 +275,9 @@ int main (int argc, char **argv)
 		0
 	};
 
-	while ((c = getopt (argc, argv, "l:r:o:d:h")) != -1)
+	errno = 0;
+
+	while ((c = getopt (argc, argv, "r:o:d:n:h")) != -1)
 	{
 		switch (c)
 		{
@@ -286,6 +292,16 @@ int main (int argc, char **argv)
 				break;
 			case 'd':
 				device_name = optarg;
+				break;
+			case 'n':
+				nframes_aux = optarg;
+				nframes = strtol (nframes_aux, NULL, 10);
+				if (errno == ERANGE ||
+					nframes > MAX_QUEUE_SIZE)
+				{
+					usage ();
+					exit(1);
+				}
 				break;
 			case '?':
 			case 'h':
@@ -372,7 +388,7 @@ int main (int argc, char **argv)
 	}
 
 	fprintf (stderr, "Taking a picture...\n");
-	if (device_loop (&device) != 0)
+	if (device_loop (&device, nframes) != 0)
 	{
 		fprintf (stderr, "Error on frame capture. "
 			"Do you have the correct permissions?\n");

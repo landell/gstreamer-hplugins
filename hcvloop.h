@@ -23,8 +23,10 @@
 #include <stdio.h>
 #include "device.h"
 
+#define MAX_QUEUE_SIZE 20
+
 int save_picture (V4l2Device *);
 int save_image_name (int (ImageBuffer *, FILE *), ImageBuffer *, char *);
-int device_loop (V4l2Device *);
+int device_loop (V4l2Device *, int nframes);
 
 #endif

@@ -29,18 +29,18 @@
 #include "hcverror.h"
 #include "device.h"
 
-#define QUEUE_SIZE 16
+static int queue_size;
 
 struct
 {
-  ImageBuffer buffers[QUEUE_SIZE];
+  ImageBuffer buffers[MAX_QUEUE_SIZE];
   int top;
 } queue =
 {
   .top = 0
 };
 
-#define INCQUEUE(x) (((x) + 1) % QUEUE_SIZE)
+#define INCQUEUE(x) (((x) + 1) % queue_size)
 
 static void enqueue_image (ImageBuffer *image)
 {
@@ -68,10 +68,10 @@ static void save_queue (V4l2Device *device)
 	char *name;
 	ImageBuffer *image;
 	fprintf (stderr, "Saving images...\n");
-	for (i = QUEUE_SIZE; i > 0; i--)
+	for (i = queue_size; i > 0; i--)
 	{
 		name = filenamenumber (device->prefix, i);
-		image = &queue.buffers[(i + queue.top) % QUEUE_SIZE];
+		image = &queue.buffers[(i + queue.top) % queue_size];
 		if (name != NULL && image->data != NULL && image->len != 0)
 			save_image_name (device->save_image, image, name);
 		if (name != NULL)
@@ -103,7 +103,7 @@ static int hcv_server (void)
 #define MAX(x,y) (((x) > (y)) ? (x) : (y))
 #endif
 
-int device_loop (V4l2Device *device)
+int device_loop (V4l2Device *device, int nframes)
 {
 	char sbuf[128];
 	DeviceErrors ret;
@@ -112,6 +112,8 @@ int device_loop (V4l2Device *device)
 	int max_fd;
 	int r;
 	int countdown = -1;
+	queue_size = (nframes >= MAX_QUEUE_SIZE ?
+		MAX_QUEUE_SIZE : nframes);
 	sfd = hcv_server ();
 	if (sfd < 0)
 		return -1;
@@ -139,7 +141,7 @@ int device_loop (V4l2Device *device)
 		if (FD_ISSET (sfd, &fds))
 		{
 			read (sfd, sbuf, sizeof (sbuf));
-			countdown = QUEUE_SIZE / 2;
+			countdown = queue_size / 2;
 		}
 		if (countdown > -1 && countdown-- == 0)
 		{
