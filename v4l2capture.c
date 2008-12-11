@@ -274,8 +274,6 @@ int main (int argc, char **argv)
 		0
 	};
 
-	errno = 0;
-
 	while ((c = getopt (argc, argv, "r:o:d:n:h")) != -1)
 	{
 		switch (c)
@@ -291,6 +289,7 @@ int main (int argc, char **argv)
 				break;
 			case 'n':
 				nframes_aux = optarg;
+				errno = 0;
 				nframes = strtol (nframes_aux, NULL, 10);
 				if (errno == ERANGE ||
 					nframes > MAX_QUEUE_SIZE)
