@@ -19,15 +19,13 @@
 
 #include "crop.h"
 #include <string.h>
+#include <stdlib.h>
 
 ImageBuffer *
 image_crop (ImageBuffer *src, int left, int top, int right, int bottom)
 {
 	ImageBuffer *dst;
-	int h = src->fmt.height;
-	int w = src->fmt.width;
 	int i;
-	unsigned char *data = src->data;
 	/* FIXME: assuming bytes per pixel is 3 */
 	int bpp = 3;
 	dst = malloc (sizeof (ImageBuffer));
@@ -46,7 +44,7 @@ image_crop (ImageBuffer *src, int left, int top, int right, int bottom)
 	}
 	for (i = top; i < bottom; i++)
 	{
-		int dline = (i - top) * dst->fmt.bytersperline;
+		int dline = (i - top) * dst->fmt.bytesperline;
 		int sline = (i * src->fmt.width + left) * bpp;
 		memcpy (dst->data + dline, src->data + sline, dst->fmt.bytesperline);
 	}
