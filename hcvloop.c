@@ -148,4 +148,5 @@ int device_loop (V4l2Device *device, int nframes)
 			save_queue (device);
 		}
 	}
+  return 0;
 }
