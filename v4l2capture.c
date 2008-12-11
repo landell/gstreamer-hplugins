@@ -38,7 +38,6 @@
 #define DEFAULT_FPS 20
 #define NFRAMES 10
 
-static int list_res;
 static char *res_code = "320x240";
 static char *file_prefix = "image";
 static char *device_name = "/dev/video0";
@@ -281,9 +280,6 @@ int main (int argc, char **argv)
 	{
 		switch (c)
 		{
-			case 'l':
-				list_res = 1;
-				break;
 			case 'r':
 				res_code = optarg;
 				break;
