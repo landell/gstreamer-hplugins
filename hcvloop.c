@@ -68,7 +68,7 @@ static void save_queue (V4l2Device *device)
 	char *name;
 	ImageBuffer *image;
 	fprintf (stderr, "Saving images...\n");
-	for (i = queue_size; i > 0; i--)
+	for (i = queue_size - 1; i >= 0; i--)
 	{
 		name = filenamenumber (device->prefix, i);
 		image = &queue.buffers[(i + queue.top) % queue_size];
