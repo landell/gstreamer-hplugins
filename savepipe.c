@@ -19,8 +19,8 @@
 
 
 #include <stdlib.h>
-#include "jpegutils.h"
 #include "device.h"
+#include "hcvmemsrc.h"
 #include <jpeglib.h>
 
 static int raw_save_image (ImageBuffer *image, FILE *file)
@@ -97,48 +97,61 @@ static int yuyv_save_image (ImageBuffer *image, FILE *file)
 
 }
 
+char *headerfn = "/var/lib/hcv/header.jpg";
+
 static int mjpeg_save_image (ImageBuffer *image, FILE *file)
 {
-	#define MIN_SIZE 128
-	unsigned char *buf = image->data;
-	int size = image->len;
-	unsigned char *ps, *pc;
-	int sizein;
-
-	/* look for JPEG start */
-	ps = buf;
-	while (((ps[0] << 8 | ps[1]) != 0xffd8) && 
-		(ps < (buf + size - MIN_SIZE)))
-		ps++;
-
-	if (ps >= buf + size - MIN_SIZE)
+	ImageBuffer *dst;
+	struct jpeg_decompress_struct decompress;
+	struct jpeg_error_mgr emgr;
+	FILE *headerfile;
+	int i;
+	JSAMPROW p;
+	int height;
+	int width;
+	unsigned char *data;
+	dst = malloc (sizeof (ImageBuffer));
+	if (dst == NULL)
 		return 1;
-
-	size -= ps - buf;
-	pc = ps;
-
-	if (!is_huffman (ps, size))
+	decompress.err = jpeg_std_error (&emgr);
+	jpeg_create_decompress (&decompress);
+	headerfile = fopen (headerfn, "r");
+	if (headerfile == NULL)
 	{
-		while (((pc[0] << 8) | pc[1]) != 0xffc0)
-		{
-			if (pc < (ps + size - 2))
-			{
-				pc++;
-			} else
-			{
-				/* corrupted file */
-				return 1;
-			}
-		}
-		sizein = pc - ps;
-		fwrite (ps, sizein, 1, file);
-		fwrite (dht_data, DHT_SIZE, 1, file);
-		fwrite (pc, size - sizein, 1, file);
-	} else
-	{
-		fwrite (pc, size, 1, file);
+		free (dst);
+		jpeg_destroy_decompress (&decompress);
+		return 1;
 	}
-
+	jpeg_stdio_src (&decompress, headerfile);
+	jpeg_read_header (&decompress, FALSE);
+	fclose (headerfile);
+	hcv_jpeg_membuffer_src (&decompress, image);
+	jpeg_read_header (&decompress, TRUE);
+	decompress.out_color_space = JCS_YCbCr;
+	jpeg_start_decompress (&decompress);
+	height = dst->fmt.height = decompress.output_width;
+	width = dst->fmt.width = decompress.output_height;
+	dst->fmt.pixelformat = V4L2_PIX_FMT_YUYV;
+	dst->fmt.bytesperline = width * decompress.output_components;
+	dst->len = height * dst->fmt.bytesperline;
+	data = dst->data = malloc (dst->len);
+	if (dst->data == NULL)
+	{
+		free (dst);
+		jpeg_destroy_decompress (&decompress);
+		return 1;
+	}
+	p = (JSAMPROW) data;
+	for (i = 0; i < dst->fmt.height; i++)
+	{
+		jpeg_read_scanlines (&decompress, &p, 1);
+		p += dst->fmt.bytesperline;
+	}
+	jpeg_finish_decompress (&decompress);
+	jpeg_destroy_decompress (&decompress);
+	jpegcode_save_image (dst, file);
+	free (dst->data);
+	free (dst);
 	return 0;
 }
 
