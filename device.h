@@ -77,5 +77,6 @@ int device_stop_capture (V4l2Device *dev);
 int device_getframe (V4l2Device *dev);
 int device_close (V4l2Device *dev);
 int device_negotiate (V4l2Device *dev, u_int32_t *formats);
+void device_savepipe (V4l2Device *dev);
 
 #endif

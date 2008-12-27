@@ -19,6 +19,8 @@
 #ifndef JPEG_UTILS_H
 #define JPEG_UTILS_H
 
+#include "huffman.h"
+
 int is_huffman (unsigned char *, int);
 
 #endif
