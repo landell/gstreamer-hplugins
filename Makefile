@@ -3,7 +3,8 @@ CROSS_COMPILE ?=
 CFLAGS ?= -g -Wall
 LIBS = -ljpeg
 CC := $(CROSS_COMPILE)$(GCC) $(CFLAGS)
-OBJECTS = v4l2capture.o device.o negotiation.o hcverror.o hcvloop.o crop.o
+OBJECTS = v4l2capture.o device.o negotiation.o hcverror.o hcvloop.o \
+	crop.o jpegutils.o
 INSTALL_DIR = /usr/bin/
 RUNTIME_DIR = /var/run/hcv
 

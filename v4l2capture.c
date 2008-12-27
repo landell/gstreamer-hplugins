@@ -33,6 +33,7 @@
 #include "hcverror.h"
 #include "hcvloop.h"
 #include <jpeglib.h>
+#include "jpegutils.h"
 
 #define TIMEOUT 1000
 #define DEFAULT_FPS 20
@@ -41,26 +42,6 @@
 static char *res_code = "320x240";
 static char *file_prefix = "image";
 static char *device_name = "/dev/video0";
-
-/* JPEG Utils */
-
-int is_huffman (unsigned char *buf, int size)
-{
-	unsigned char *ptbuf;
-	ptbuf = buf;
-	while (((ptbuf[0] << 8) | ptbuf[1]) != 0xffda)
-	{
-		/* Max window we look for the magic cookie */
-		if (ptbuf - buf > 2048)
-			return 0;
-		if (((ptbuf[0] << 8) | ptbuf[1]) == 0xffc4)
-			return 1;
-		if (ptbuf == (buf + size - 2))
-			return 0;
-		ptbuf++;
-	}
-	return 0;
-}
 
 static char * get_filename (V4l2Device *dev)
 {
