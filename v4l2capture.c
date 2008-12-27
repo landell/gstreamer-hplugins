@@ -31,7 +31,6 @@
 #include "device.h"
 #include "hcverror.h"
 #include "hcvloop.h"
-#include <jpeglib.h>
 
 #define TIMEOUT 1000
 #define DEFAULT_FPS 20
