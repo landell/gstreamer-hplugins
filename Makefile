@@ -8,12 +8,12 @@ OBJECTS = v4l2capture.o device.o negotiation.o hcverror.o hcvloop.o \
 INSTALL_DIR = /usr/bin/
 RUNTIME_DIR = /var/run/hcv
 
-all: v4l2capture client
+all: v4l2capture v4l2capture-client
 
 .c.o:
 	$(CC) -c -o $@ $<
 
-client: client.o
+v4l2capture-client: client.o
 	$(CC) -o v4l2capture-client client.o
 
 v4l2capture: $(OBJECTS)
