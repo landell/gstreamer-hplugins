@@ -90,6 +90,9 @@ static int yuyv_save_image (ImageBuffer *image, FILE *file)
 	
 	jpegcode_save_image (dst, file);
 
+	free (dst->data);
+	free (dst);
+
 	return 0;
 
 }
