@@ -43,19 +43,6 @@ static char *res_code = "320x240";
 static char *file_prefix = "image";
 static char *device_name = "/dev/video0";
 
-static char * get_filename (V4l2Device *dev)
-{
-	#define NAME_SIZE 80
-	#define MIN_SIZE 128
-	char *name = NULL;
-
-	name = malloc(NAME_SIZE);
-	if (!name)
-		return NULL;
-	snprintf (name, NAME_SIZE, "%s.jpg", dev->prefix);
-	return name;
-}
-
 static int raw_save_image (ImageBuffer *image, FILE *file)
 {
 	fwrite (image->data, image->len, 1, file);
@@ -127,38 +114,9 @@ static int yuyv_save_image (ImageBuffer *image, FILE *file)
 
 }
 
-int save_image_name (int save_image (ImageBuffer *, FILE *),
-	ImageBuffer *image, char *name)
-{
-	int r;
-	FILE *file;
-	file = fopen (name, "wb");
-
-	if (file == NULL)
-	{
-		return 1;
-	}
-
-	r = save_image (image, file);
-
-	fclose (file);
-
-	return r;
-}
-
-int save_picture (V4l2Device *device)
-{
-	int r;
-	char *name = get_filename (device);
-	if (!name)
-		return 1;
-	r = save_image_name (device->save_image, &device->image, name);
-	free (name);
-	return r;
-}
-
 static int mjpeg_save_image (ImageBuffer *image, FILE *file)
 {
+	#define MIN_SIZE 128
 	unsigned char *buf = image->data;
 	int size = image->len;
 	unsigned char *ps, *pc;
