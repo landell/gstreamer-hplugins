@@ -23,5 +23,7 @@
 
 void skinfilter (unsigned char *img, unsigned char *u, unsigned char *v,
 	 int h, int w);
+void skinfilter_threshold (unsigned char *img, unsigned char *u, unsigned char *v,
+	int h, int w, unsigned char th);
 
 #endif

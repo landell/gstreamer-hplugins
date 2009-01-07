@@ -43,3 +43,25 @@ void skinfilter (unsigned char *img, unsigned char *u, unsigned char *v,
 	}
 }
 
+/* skinfilter - given a model described by U and V components, and
+ * the components U and V of desired image, this function determines if
+ * a pixel represents the object of interest, if the probability is
+ * greater than a threshold.
+ */
+void skinfilter_threshold (unsigned char *img, unsigned char *u, unsigned char *v,
+	int h, int w, unsigned char th)
+{
+	int i, j, k;
+	unsigned char m, n;
+
+	for (i = 0; i < h; ++i)
+	{
+		for (j = 0; j < w; ++j)
+		{
+			k = i*w + j;
+			m = *(u + k);
+			n = *(v + k);
+			*(img + k) = ((*(skin_model + m*w + n) > th) ? 255 : 0);
+		}
+	}
+}
