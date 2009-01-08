@@ -31,8 +31,8 @@ image_crop (ImageBuffer *src, int left, int top, int right, int bottom)
 	dst = malloc (sizeof (ImageBuffer));
 	if (dst == NULL)
 		return NULL;
-	dst->fmt.height = right - left;
-	dst->fmt.width = bottom - top;
+	dst->fmt.height = bottom - top;
+	dst->fmt.width = right - left;
 	dst->fmt.pixelformat = src->fmt.pixelformat;
 	dst->fmt.bytesperline = dst->fmt.width * bpp;
 	dst->len = dst->fmt.height * dst->fmt.bytesperline;
