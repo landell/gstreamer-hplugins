@@ -17,10 +17,10 @@
  */
 
 
+#include "skinmodel.h"
+
 static inline unsigned char
 model (unsigned char u, unsigned char v)
 {
-  if (u > 100 && u < 150 && v > 100 && v < 150)
-    return 255;
-  return 0;
+  return skin_model[u * 256 + v];
 }
