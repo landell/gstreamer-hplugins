@@ -61,7 +61,7 @@ static int jpegcode_save_image (ImageBuffer *image, FILE *file)
   int r;
   face = image_facetracker (image);
   if (face == NULL)
-    return 1;
+    return realjpegcode_save_image (image, file);
   r = realjpegcode_save_image (face, file);
   free (face->data);
   free (face);
