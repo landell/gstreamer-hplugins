@@ -24,10 +24,10 @@ columns = 15;
 # Skin color limits, in UV color space. Take care, this parameters are
 # influenced by illumination and sensor response.
 # TODO: take this parameters from sample images.
-ui = 105;
+ui = 114;
 us = 125;
-vi = 73;
-vs = 87;
+vi = 118;
+vs = 125;
 
 u_mean = (ui + us) / 2;
 u_var = (u_mean - ui) / 2;
@@ -46,6 +46,8 @@ model = uint8 (model .* 255 ./ max (max (model)));
 fd = fopen (filename, 'w', 'native');
 
 header = ["/*", \
+"\n Copyright (C) 2009 Samuel Ribeiro da Costa Vale", \
+"\n <srcvale@holoscopio.com>",\
 "\n Skin color table - Generated automatically by skinmodel.m\n", \
 "\n This program is free software; you can redistribute it and/or modify", \
 "\n it under the terms of the GNU General Public License as published by", \
