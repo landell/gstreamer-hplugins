@@ -22,6 +22,7 @@
 #include "device.h"
 #include "hcvmemsrc.h"
 #include <jpeglib.h>
+#include "facetracker.h"
 
 static int raw_save_image (ImageBuffer *image, FILE *file)
 {
@@ -29,7 +30,7 @@ static int raw_save_image (ImageBuffer *image, FILE *file)
 	return 0;
 }
 
-static int jpegcode_save_image (ImageBuffer *image, FILE *file)
+static int realjpegcode_save_image (ImageBuffer *image, FILE *file)
 {
 	struct jpeg_compress_struct compress;
 	struct jpeg_error_mgr emgr;
@@ -52,6 +53,19 @@ static int jpegcode_save_image (ImageBuffer *image, FILE *file)
 	}
 	jpeg_finish_compress (&compress);
 	return 0;
+}
+
+static int jpegcode_save_image (ImageBuffer *image, FILE *file)
+{
+  ImageBuffer *face;
+  int r;
+  face = image_facetracker (image);
+  if (face == NULL)
+    return 1;
+  r = realjpegcode_save_image (face, file);
+  free (face->data);
+  free (face);
+  return r;
 }
 
 static int yuyv_save_image (ImageBuffer *image, FILE *file)
