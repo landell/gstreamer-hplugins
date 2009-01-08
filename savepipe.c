@@ -80,7 +80,7 @@ static int yuyv_save_image (ImageBuffer *image, FILE *file)
 		return 1;
 	dst->fmt.height = height;
 	dst->fmt.width = width;
-	dst->fmt.pixelformat = V4L2_PIX_FMT_YUYV;
+	dst->fmt.pixelformat = V4L2_PIX_FMT_YUV420;
 	dst->fmt.bytesperline = width * 3;
 	dst->len = height * width * 3;
 	dst->data = malloc (dst->len);
