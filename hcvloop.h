@@ -27,6 +27,6 @@
 
 int save_picture (V4l2Device *);
 int save_image_name (int (ImageBuffer *, FILE *), ImageBuffer *, char *);
-int device_loop (V4l2Device *, int nframes);
+int device_loop (V4l2Device *, int nframes, int daemon);
 
 #endif

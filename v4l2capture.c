@@ -75,6 +75,7 @@ static void usage ()
 	"-r resolution	Image resolution WxH (default: 320x240)\n"
 	"-o prefix	Output prefix (default: ./image)\n"
 	"-d device	Path to device (default: /dev/video0)\n"
+	"-s     	Run as service (use v4l2capture-client to shot)\n"
 	"-n number	Number of frames to take (max: %d, default: %d)\n"
 	"-h		Show this help\n", MAX_QUEUE_SIZE, NFRAMES);
 }
@@ -84,6 +85,7 @@ int main (int argc, char **argv)
 	V4l2Device device;
 	int ret;
 	int c;
+	int daemon = 0;
 	int nframes = NFRAMES;
 	char *nframes_aux;
 
@@ -94,7 +96,7 @@ int main (int argc, char **argv)
 		0
 	};
 
-	while ((c = getopt (argc, argv, "r:o:d:n:h")) != -1)
+	while ((c = getopt (argc, argv, "r:o:d:n:hs")) != -1)
 	{
 		switch (c)
 		{
@@ -118,6 +120,9 @@ int main (int argc, char **argv)
 					exit(1);
 				}
 				break;
+			case 's':
+				daemon = 1;
+				break;
 			case '?':
 			case 'h':
 			default:
@@ -125,7 +130,7 @@ int main (int argc, char **argv)
 				exit (1);
 		}
 	}
-
+printf ("daemon: %d\n", daemon);
 	device.name = device_name;
 	device.prefix = file_prefix;
 	device.fps = DEFAULT_FPS;
@@ -190,7 +195,7 @@ int main (int argc, char **argv)
 	}
 
 	fprintf (stderr, "Taking a picture...\n");
-	if (device_loop (&device, nframes) != 0)
+	if (device_loop (&device, nframes, daemon) != 0)
 	{
 		fprintf (stderr, "Error on frame capture. "
 			"Do you have the correct permissions?\n");
