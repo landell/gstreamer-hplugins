@@ -130,7 +130,7 @@ int main (int argc, char **argv)
 				exit (1);
 		}
 	}
-printf ("daemon: %d\n", daemon);
+
 	device.name = device_name;
 	device.prefix = file_prefix;
 	device.fps = DEFAULT_FPS;
