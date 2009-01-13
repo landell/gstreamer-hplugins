@@ -143,8 +143,8 @@ static int mjpeg_save_image (ImageBuffer *image, FILE *file)
 	jpeg_read_header (&decompress, TRUE);
 	decompress.out_color_space = JCS_YCbCr;
 	jpeg_start_decompress (&decompress);
-	height = dst->fmt.height = decompress.output_width;
-	width = dst->fmt.width = decompress.output_height;
+	height = dst->fmt.height = decompress.output_height;
+	width = dst->fmt.width = decompress.output_width;
 	dst->fmt.pixelformat = V4L2_PIX_FMT_YUYV;
 	dst->fmt.bytesperline = width * decompress.output_components;
 	dst->len = height * dst->fmt.bytesperline;
