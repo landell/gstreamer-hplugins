@@ -111,7 +111,7 @@ int device_shot (V4l2Device *device, int nframes)
 	int countdown = -1;
 	queue_size = (nframes >= MAX_QUEUE_SIZE ?
 		MAX_QUEUE_SIZE : nframes);
-	countdown = queue_size / 2;
+	countdown = queue_size;
 	do {
 		FD_ZERO (&fds);
 		FD_SET (device->fd, &fds);
@@ -129,7 +129,7 @@ int device_shot (V4l2Device *device, int nframes)
 					device_error (ret));
 			else
 				enqueue_image (&device->image);
-		}	
+		}
 	} while (countdown-- > 0);
 	save_queue (device);
 	return 0;
