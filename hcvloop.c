@@ -58,7 +58,7 @@ static char * filenamenumber (char *prefix, int n)
 	char *name = malloc (strlen (prefix) + 32);
 	if (!name)
 		return NULL;
-	sprintf (name, "%s%d.jpg", prefix, n);
+	sprintf (name, "%s-%d.jpg", prefix, n + 1);
 	return name;
 }
 
