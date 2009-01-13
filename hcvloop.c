@@ -103,32 +103,58 @@ static int hcv_server (void)
 #define MAX(x,y) (((x) > (y)) ? (x) : (y))
 #endif
 
-int device_loop (V4l2Device *device, int nframes, int daemon)
+int device_shot (V4l2Device *device, int nframes)
+{
+	DeviceErrors ret;
+	fd_set fds;
+	int r;
+	int countdown = -1;
+	queue_size = (nframes >= MAX_QUEUE_SIZE ?
+		MAX_QUEUE_SIZE : nframes);
+	countdown = queue_size / 2;
+	do {
+		FD_ZERO (&fds);
+		FD_SET (device->fd, &fds);
+		r = select (device->fd + 1, &fds, NULL, NULL, NULL);
+		if (r == -1 || r == 0)
+		{
+			fprintf (stderr, "Error on select: %s\n",
+				strerror (errno));
+		}
+		if (FD_ISSET (device->fd, &fds))
+		{
+			ret = device_getframe (device);
+			if (ret != DEVICE_OK)
+				fprintf (stderr, "Could not get frame: %s\n",
+					device_error (ret));
+			else
+				enqueue_image (&device->image);
+		}	
+	} while (countdown-- > 0);
+	save_queue (device);
+	return 0;
+}
+
+int device_loop (V4l2Device *device, int nframes)
 {
 	char sbuf[128];
 	DeviceErrors ret;
 	fd_set fds;
-	int sfd = 0;
+	int sfd;
 	int max_fd;
 	int r;
 	int countdown = -1;
-	int flag;
 	queue_size = (nframes >= MAX_QUEUE_SIZE ?
 		MAX_QUEUE_SIZE : nframes);
-	if (daemon)
-	{
-		sfd = hcv_server ();
-		if (sfd < 0)
-			return -1;
-	} else
-		flag = 1;
+	sfd = hcv_server ();
+	if (sfd < 0)
+		return -1;
 	max_fd = MAX (sfd, device->fd);
 	while (1)
 	{
 		FD_ZERO (&fds);
 		FD_SET (device->fd, &fds);
-		if (daemon)
-			FD_SET (sfd, &fds);
+		FD_SET (sfd, &fds);
 		r = select (max_fd + 1, &fds, NULL, NULL, NULL);
 		if (r == -1 || r == 0)
 		{
@@ -145,17 +171,14 @@ int device_loop (V4l2Device *device, int nframes, int daemon)
 				enqueue_image (&device->image);
 		}
 		
-		if (flag || FD_ISSET (sfd, &fds))
+		if (FD_ISSET (sfd, &fds))
 		{
 			read (sfd, sbuf, sizeof (sbuf));
 			countdown = queue_size / 2;
-			flag = 0;
 		}
 		if (countdown > -1 && countdown-- == 0)
 		{
 			save_queue (device);
-			if (!daemon)
-				break;
 		}
 	}
 	return 0;

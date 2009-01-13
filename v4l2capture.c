@@ -83,6 +83,7 @@ static void usage ()
 int main (int argc, char **argv)
 {
 	V4l2Device device;
+	int (* fp)(V4l2Device *, int);
 	int ret;
 	int c;
 	int daemon = 0;
@@ -195,7 +196,8 @@ int main (int argc, char **argv)
 	}
 
 	fprintf (stderr, "Taking a picture...\n");
-	if (device_loop (&device, nframes, daemon) != 0)
+	fp = (daemon ? device_loop : device_shot);
+	if ((*fp) (&device, nframes) != 0)
 	{
 		fprintf (stderr, "Error on frame capture. "
 			"Do you have the correct permissions?\n");
