@@ -1,4 +1,4 @@
-#!/usr/bin/octave -qf
+#!/usr/bin/octave -q
 
 # Copyright (C) 2009 Samuel Ribeiro da Costa Vale
 # <srcvale@holoscopio.com>
@@ -18,16 +18,25 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301 USA.
 
+inputfile = 'input.png';
 filename = 'skinmodel.h';
 columns = 15;
 
 # Skin color limits, in UV color space. Take care, this parameters are
 # influenced by illumination and sensor response.
-# TODO: take this parameters from sample images.
-ui = 114;
-us = 125;
-vi = 118;
-vs = 125;
+
+img = imread (inputfile);
+R = real (img(:,:,1));
+G = real (img(:,:,2));
+B = real (img(:,:,3));
+
+Cb =  - (0.168736 .* R) - (0.331264 .* G) + (0.5      .* B);
+Cr =  (0.5      .* R) - (0.418688 .* G) - (0.081312 .* B);
+
+ui = 128 + min (min (Cb))
+us = 128 + max (max (Cb))
+vi = 128 + min (min (Cr))
+vs = 128 + max (max (Cr))
 
 u_mean = (ui + us) / 2;
 u_var = (u_mean - ui) / 2;
