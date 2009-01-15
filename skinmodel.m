@@ -51,6 +51,7 @@ v_dist = normpdf ([0:255], v_mean, v_var);
 model = u_dist' * v_dist;
 model = uint8 (model .* 255 ./ max (max (model)));
 [h w] = size (model);
+model = model';
 
 fd = fopen (filename, 'w', 'native');
 
