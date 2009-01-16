@@ -145,7 +145,7 @@ static int mjpeg_save_image (ImageBuffer *image, FILE *file)
 	jpeg_start_decompress (&decompress);
 	height = dst->fmt.height = decompress.output_height;
 	width = dst->fmt.width = decompress.output_width;
-	dst->fmt.pixelformat = V4L2_PIX_FMT_YUYV;
+	dst->fmt.pixelformat = V4L2_PIX_FMT_YUV420;
 	dst->fmt.bytesperline = width * decompress.output_components;
 	dst->len = height * dst->fmt.bytesperline;
 	data = dst->data = malloc (dst->len);
