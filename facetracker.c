@@ -145,12 +145,8 @@ image_search (ImageBuffer *src, int *left, int *top, int *right, int *bottom)
 #define MIN_AREA	900
 #define MIN_SIZE	30
 #define BORDER		30
-#define SCALE		16
-#define W_MAX		320
-#define H_MAX		240
-#define W_CHECK(a) { a = (a < 0 ? 0 : a); a = (a > W_MAX ? W_MAX : a);}
-#define H_CHECK(a) { a = (a < 0 ? 0 : a); a = (a > H_MAX ? H_MAX : a);}
-
+#define SCALE		8
+#define SIZE_CHECK(a, w) { a = (a < 0 ? 0 : a); a = (a > w ? w : a);}
 ImageBuffer *
 image_facetracker (ImageBuffer *src)
 {
@@ -158,10 +154,14 @@ image_facetracker (ImageBuffer *src)
   ImageBuffer *tmp2;
   int err;
   int l, t, r, b, w, h;
+  int wo, ho, ratio;
+  wo = src->fmt.width;
+  ho = src->fmt.height;
+  ratio = SCALE * wo / 160; /* base size */
   tmp = image_filter (src);
   if (tmp == NULL)
     return NULL;
-  tmp2 = image_resize_subscale (tmp, SCALE, 128);
+  tmp2 = image_resize_subscale (tmp, ratio, 128);
   free (tmp->data);
   free (tmp);
   if (tmp2 == NULL)
@@ -171,17 +171,17 @@ image_facetracker (ImageBuffer *src)
   free (tmp2);
   if (err)
     return NULL;
-  l *= SCALE;
-  t *= SCALE;
-  r *= SCALE;
-  b *= SCALE;
+  l *= ratio;
+  t *= ratio;
+  r *= ratio;
+  b *= ratio;
   w = r - l;
   h = b - t;
   if ((w * h < MIN_AREA) || (w < MIN_SIZE) || (h < MIN_SIZE))
     return NULL;
-  l -= BORDER; W_CHECK(l);
-  b += BORDER; H_CHECK(b);
-  r += BORDER; W_CHECK(r);
-  t -= BORDER; W_CHECK(t);
+  l -= BORDER; SIZE_CHECK(l, wo);
+  b += BORDER; SIZE_CHECK(b, ho);
+  r += BORDER; SIZE_CHECK(r, wo);
+  t -= BORDER; SIZE_CHECK(t, ho);
   return image_crop (src, l, t, r, b);
 }
