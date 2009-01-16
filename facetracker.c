@@ -1,5 +1,6 @@
 /*
  *  Copyright (C) 2009  Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+ *  Copyright (C) 2009  Samuel Ribeiro da Costa Vale <srcvale@holoscopio.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +23,6 @@
 #include "facetracker.h"
 #include "crop.h"
 #include "model.h"
-
 
 /* This receives the image in YCbCr format, that is, YUV420 */
 static ImageBuffer *
@@ -52,7 +52,7 @@ image_filter (ImageBuffer *src)
     for (j = 0; j < dst->fmt.width; j++)
     {
       k = i * dst->fmt.bytesperline + j;
-      l = i * src->fmt.width + j;;
+      l = i * src->fmt.width + j;
       dst->data[k] = model (src->data[l * 3 + 1], src->data[l * 3 + 2]);
     }
   }
@@ -61,7 +61,7 @@ image_filter (ImageBuffer *src)
 
 /* This receives the image in greyscale format, that is, GREY */
 static ImageBuffer *
-image_resize_subscale (ImageBuffer *src, int scale)
+image_resize_subscale (ImageBuffer *src, int scale, int th)
 {
   ImageBuffer *dst;
   int i, j, k, l, m, n, sum;
@@ -94,7 +94,8 @@ image_resize_subscale (ImageBuffer *src, int scale)
         for (n = 0; n < scale; n++)
           sum += src->data[l + m * src->fmt.bytesperline + n];
       }
-      dst->data[k] = sum / (scale * scale);
+      sum /= (scale * scale);
+      dst->data[k] = (sum > th ? sum : 0);
     }
   }
   return dst;
@@ -141,17 +142,26 @@ image_search (ImageBuffer *src, int *left, int *top, int *right, int *bottom)
 }
 
 /* This receives the image in YCbCr format, that is, YUV420 */
+#define MIN_AREA	900
+#define MIN_SIZE	30
+#define BORDER		30
+#define SCALE		16
+#define W_MAX		320
+#define H_MAX		240
+#define W_CHECK(a) { a = (a < 0 ? 0 : a); a = (a > W_MAX ? W_MAX : a);}
+#define H_CHECK(a) { a = (a < 0 ? 0 : a); a = (a > H_MAX ? H_MAX : a);}
+
 ImageBuffer *
 image_facetracker (ImageBuffer *src)
 {
   ImageBuffer *tmp;
   ImageBuffer *tmp2;
   int err;
-  int l, t, r, b;
+  int l, t, r, b, w, h;
   tmp = image_filter (src);
   if (tmp == NULL)
     return NULL;
-  tmp2 = image_resize_subscale (tmp, 64);
+  tmp2 = image_resize_subscale (tmp, SCALE, 128);
   free (tmp->data);
   free (tmp);
   if (tmp2 == NULL)
@@ -161,5 +171,17 @@ image_facetracker (ImageBuffer *src)
   free (tmp2);
   if (err)
     return NULL;
-  return image_crop (src, l * 64, t * 64, r * 64, b * 64);
+  l *= SCALE;
+  t *= SCALE;
+  r *= SCALE;
+  b *= SCALE;
+  w = r - l;
+  h = b - t;
+  if ((w * h < MIN_AREA) || (w < MIN_SIZE) || (h < MIN_SIZE))
+    return NULL;
+  l -= BORDER; W_CHECK(l);
+  b += BORDER; H_CHECK(b);
+  r += BORDER; W_CHECK(r);
+  t -= BORDER; W_CHECK(t);
+  return image_crop (src, l, t, r, b);
 }
