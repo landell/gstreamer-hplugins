@@ -142,9 +142,9 @@ image_search (ImageBuffer *src, int *left, int *top, int *right, int *bottom)
 }
 
 /* This receives the image in YCbCr format, that is, YUV420 */
-#define MIN_AREA	900
-#define MIN_SIZE	30
-#define BORDER		30
+#define MIN_AREA	6
+#define MIN_SIZE	2
+#define BORDER		15
 #define SCALE		8
 #define SIZE_CHECK(a, w) { a = (a < 0 ? 0 : a); a = (a > w ? w : a);}
 ImageBuffer *
@@ -157,11 +157,11 @@ image_facetracker (ImageBuffer *src)
   int wo, ho, ratio;
   wo = src->fmt.width;
   ho = src->fmt.height;
-  ratio = SCALE * wo / 160; /* base size */
+  ratio = wo / 160; /* base size */
   tmp = image_filter (src);
   if (tmp == NULL)
     return NULL;
-  tmp2 = image_resize_subscale (tmp, ratio, 128);
+  tmp2 = image_resize_subscale (tmp, SCALE * ratio, 128);
   free (tmp->data);
   free (tmp);
   if (tmp2 == NULL)
@@ -171,17 +171,17 @@ image_facetracker (ImageBuffer *src)
   free (tmp2);
   if (err)
     return NULL;
-  l *= ratio;
-  t *= ratio;
-  r *= ratio;
-  b *= ratio;
   w = r - l;
   h = b - t;
-  if ((w * h < MIN_AREA) || (w < MIN_SIZE) || (h < MIN_SIZE))
+  if (((w * h) < MIN_AREA) || (w < MIN_SIZE) || (h < MIN_SIZE))
     return NULL;
-  l -= BORDER; SIZE_CHECK(l, wo);
-  b += BORDER; SIZE_CHECK(b, ho);
-  r += BORDER; SIZE_CHECK(r, wo);
-  t -= BORDER; SIZE_CHECK(t, ho);
+  l *= ratio * SCALE;
+  t *= ratio * SCALE;
+  r *= ratio * SCALE;
+  b *= ratio * SCALE;
+  l -= BORDER * ratio; SIZE_CHECK(l, wo);
+  b += BORDER * ratio; SIZE_CHECK(b, ho);
+  r += BORDER * ratio; SIZE_CHECK(r, wo);
+  t -= BORDER * ratio; SIZE_CHECK(t, ho);
   return image_crop (src, l, t, r, b);
 }
