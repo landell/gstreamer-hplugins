@@ -75,7 +75,7 @@ static void usage ()
 	"-r resolution	Image resolution WxH (default: 320x240)\n"
 	"-o prefix	Output prefix (default: ./image)\n"
 	"-d device	Path to device (default: /dev/video0)\n"
-	"-s     	Run as service (use v4l2capture-client to shot)\n"
+	"-s		Run as service (use v4l2capture-client to shot)\n"
 	"-n number	Number of frames to take (max: %d, default: %d)\n"
 	"-h		Show this help\n", MAX_QUEUE_SIZE, NFRAMES);
 }
