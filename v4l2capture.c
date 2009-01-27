@@ -86,9 +86,10 @@ int main (int argc, char **argv)
 	int (* fp)(V4l2Device *, int);
 	int ret;
 	int c;
-	int daemon = 0;
 	int nframes = NFRAMES;
 	char *nframes_aux;
+	FieldOptions options;
+	options.data = 0;
 
 	u_int32_t formats[] =
 	{
@@ -122,7 +123,7 @@ int main (int argc, char **argv)
 				}
 				break;
 			case 's':
-				daemon = 1;
+				options.daemon = 1;
 				break;
 			case '?':
 			case 'h':
@@ -196,7 +197,7 @@ int main (int argc, char **argv)
 	}
 
 	fprintf (stderr, "Taking a picture...\n");
-	fp = (daemon ? device_loop : device_shot);
+	fp = (options.daemon ? device_loop : device_shot);
 	if ((*fp) (&device, nframes) != 0)
 	{
 		fprintf (stderr, "Error on frame capture. "

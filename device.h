@@ -55,6 +55,17 @@ typedef struct {
 	size_t length;
 } DeviceBuffer;
 
+typedef union {
+	unsigned long data;
+	struct {
+		unsigned int daemon :1;
+		unsigned int facetracker :1;
+		unsigned int crop :1;
+		unsigned int facemark :1;
+		unsigned int force_3x4 :1;
+	};
+} FieldOptions;
+
 typedef struct {
 	int fd;
 	char *name;
