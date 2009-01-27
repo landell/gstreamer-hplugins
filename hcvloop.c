@@ -103,7 +103,7 @@ static int hcv_server (void)
 #define MAX(x,y) (((x) > (y)) ? (x) : (y))
 #endif
 
-int device_shot (V4l2Device *device, int nframes)
+int device_serie (V4l2Device *device, FieldOptions *opt, int nframes)
 {
 	DeviceErrors ret;
 	fd_set fds;
@@ -135,7 +135,7 @@ int device_shot (V4l2Device *device, int nframes)
 	return 0;
 }
 
-int device_loop (V4l2Device *device, int nframes)
+int device_loop (V4l2Device *device, FieldOptions *opt, int nframes)
 {
 	char sbuf[128];
 	DeviceErrors ret;
@@ -183,3 +183,15 @@ int device_loop (V4l2Device *device, int nframes)
 	}
 	return 0;
 }
+
+int device_shot (V4l2Device *device, FieldOptions *opt, int nframes)
+{
+	int (* fp)(V4l2Device *, FieldOptions *, int);
+	int ret;
+
+	fp = (opt->daemon ? device_loop : device_serie);
+	ret = (*fp)(device, opt, nframes);
+
+	return ret;
+}
+
