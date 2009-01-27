@@ -25,6 +25,17 @@
 
 #define MAX_QUEUE_SIZE 20
 
+typedef union {
+	unsigned long data;
+	struct {
+		unsigned int daemon :1;
+		unsigned int facetracker :1;
+		unsigned int crop :1;
+		unsigned int facemark :1;
+		unsigned int force_3x4 :1;
+	};
+} FieldOptions;
+
 int save_picture (V4l2Device *);
 int save_image_name (int (ImageBuffer *, FILE *), ImageBuffer *, char *);
 int device_shot (V4l2Device *, int nframes);
