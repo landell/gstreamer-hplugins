@@ -85,10 +85,11 @@ int main (int argc, char **argv)
 	V4l2Device device;
 	int ret;
 	int c;
-	int nframes = NFRAMES;
 	char *nframes_aux;
 	FieldOptions options;
-	options.data = 0;
+	
+	options.flags = 0;
+	options.nframes = NFRAMES;
 
 	u_int32_t formats[] =
 	{
@@ -113,9 +114,9 @@ int main (int argc, char **argv)
 			case 'n':
 				nframes_aux = optarg;
 				errno = 0;
-				nframes = strtol (nframes_aux, NULL, 10);
+				options.nframes = strtol (nframes_aux, NULL, 10);
 				if (errno == ERANGE ||
-					nframes > MAX_QUEUE_SIZE)
+					options.nframes > MAX_QUEUE_SIZE)
 				{
 					usage ();
 					exit(1);
@@ -196,7 +197,7 @@ int main (int argc, char **argv)
 	}
 
 	fprintf (stderr, "Taking a picture...\n");
-	if (device_shot (&device, &options, nframes) != 0)
+	if (device_shot (&device, &options) != 0)
 	{
 		fprintf (stderr, "Error on frame capture. "
 			"Do you have the correct permissions?\n");

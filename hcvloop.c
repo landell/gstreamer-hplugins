@@ -103,14 +103,14 @@ static int hcv_server (void)
 #define MAX(x,y) (((x) > (y)) ? (x) : (y))
 #endif
 
-int device_serie (V4l2Device *device, FieldOptions *opt, int nframes)
+int device_serie (V4l2Device *device, FieldOptions *opt)
 {
 	DeviceErrors ret;
 	fd_set fds;
 	int r;
 	int countdown = -1;
-	queue_size = (nframes >= MAX_QUEUE_SIZE ?
-		MAX_QUEUE_SIZE : nframes);
+	queue_size = (opt->nframes >= MAX_QUEUE_SIZE ?
+		MAX_QUEUE_SIZE : opt->nframes);
 	countdown = queue_size;
 	do {
 		FD_ZERO (&fds);
@@ -135,7 +135,7 @@ int device_serie (V4l2Device *device, FieldOptions *opt, int nframes)
 	return 0;
 }
 
-int device_loop (V4l2Device *device, FieldOptions *opt, int nframes)
+int device_loop (V4l2Device *device, FieldOptions *opt)
 {
 	char sbuf[128];
 	DeviceErrors ret;
@@ -144,8 +144,8 @@ int device_loop (V4l2Device *device, FieldOptions *opt, int nframes)
 	int max_fd;
 	int r;
 	int countdown = -1;
-	queue_size = (nframes >= MAX_QUEUE_SIZE ?
-		MAX_QUEUE_SIZE : nframes);
+	queue_size = (opt->nframes >= MAX_QUEUE_SIZE ?
+		MAX_QUEUE_SIZE : opt->nframes);
 	sfd = hcv_server ();
 	if (sfd < 0)
 		return -1;
@@ -184,13 +184,13 @@ int device_loop (V4l2Device *device, FieldOptions *opt, int nframes)
 	return 0;
 }
 
-int device_shot (V4l2Device *device, FieldOptions *opt, int nframes)
+int device_shot (V4l2Device *device, FieldOptions *opt)
 {
-	int (* fp)(V4l2Device *, FieldOptions *, int);
+	int (* fp)(V4l2Device *, FieldOptions *);
 	int ret;
 
 	fp = (opt->daemon ? device_loop : device_serie);
-	ret = (*fp)(device, opt, nframes);
+	ret = (*fp)(device, opt);
 
 	return ret;
 }
