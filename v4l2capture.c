@@ -168,8 +168,6 @@ int main (int argc, char **argv)
 		exit (1);
 	}
 
-	device_savepipe (&device);
-
 	ret = device_init (&device);
 	if (ret != DEVICE_OK)
 	{	

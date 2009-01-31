@@ -1,5 +1,6 @@
 /*
  *  Copyright (C) 2008  Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+ *  Copyright (C) 2009  Samuel R. C. Vale <srcvale@holoscopio.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,6 +29,7 @@
 #include "hcvloop.h"
 #include "hcverror.h"
 #include "device.h"
+#include "facetracker.h"
 
 static int queue_size;
 
@@ -62,16 +64,20 @@ static char * filenamenumber (char *prefix, int n)
 	return name;
 }
 
-static void process_image (ImageBuffer *image, FieldOptions *opt)
+static ImageBuffer* process_image (ImageBuffer *image, FieldOptions *opt)
 {
+	ImageBuffer *face;
 
+	face = image_facetracker (image);
+	
+	return face;
 }
 
 static void process_queue (V4l2Device *device, FieldOptions *opt)
 {
 	int i;
 	char *name;
-	ImageBuffer *image;
+	ImageBuffer *image, *image_tmp, *image_tmp2;
 	fprintf (stderr, "Saving images...\n");
 	for (i = queue_size - 1; i >= 0; i--)
 	{
@@ -79,8 +85,18 @@ static void process_queue (V4l2Device *device, FieldOptions *opt)
 		image = &queue.buffers[(i + queue.top) % queue_size];
 		if (name != NULL && image->data != NULL && image->len != 0)
 		{
-			save_image_name (device->save_image, image, name);
-			process_image (image, opt);
+			image_tmp = image_convert_format (image);
+			if (image_tmp == NULL)
+			{
+				free (name);
+				continue;
+			}
+			image_tmp2 = process_image (image_tmp, opt);
+			save_image (image_tmp2, name);
+			free (image_tmp->data);
+			free (image_tmp);
+			free (image_tmp2->data);
+			free (image_tmp2);
 		}
 		if (name != NULL)
 			free (name);

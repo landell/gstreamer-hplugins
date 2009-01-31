@@ -17,34 +17,31 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-
-#ifndef HCVLOOP_H
-#define HCVLOOP_H
-
-#include <stdio.h>
+#include <stdlib.h>
 #include "device.h"
+#include <jpeglib.h>
 
-#define MAX_QUEUE_SIZE 20
-
-typedef struct {
-	int nframes;
-	union {
-		unsigned long flags;
-		struct {
-			unsigned int daemon :1;
-			unsigned int facetracker :1;
-			unsigned int crop :1;
-			unsigned int facemark :1;
-			unsigned int force_3x4 :1;
-		};
-	};
-} FieldOptions;
-
-int save_picture (V4l2Device *);
-int save_image (ImageBuffer *, char *);
-int device_serie (V4l2Device *, FieldOptions *);
-int device_loop (V4l2Device *, FieldOptions *);
-int device_shot (V4l2Device *, FieldOptions *);
-ImageBuffer* image_convert_format (ImageBuffer *);
-
-#endif
+int jpeg_save_image (ImageBuffer *image, FILE *file)
+{
+	struct jpeg_compress_struct compress;
+	struct jpeg_error_mgr emgr;
+	int i;
+	JSAMPROW p;
+	compress.err = jpeg_std_error (&emgr);
+	jpeg_create_compress (&compress);
+	compress.in_color_space = JCS_YCbCr;
+	jpeg_set_defaults (&compress);
+	jpeg_stdio_dest (&compress, file);
+	compress.image_width = image->fmt.width;
+	compress.image_height = image->fmt.height;
+	compress.input_components = 3;
+	jpeg_start_compress (&compress, TRUE);
+	p = (JSAMPROW) image->data;
+	for (i = 0; i < image->fmt.height; i++)
+	{
+		jpeg_write_scanlines (&compress, &p, 1);
+		p += image->fmt.bytesperline;
+	}
+	jpeg_finish_compress (&compress);
+	return 0;
+}

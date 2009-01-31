@@ -22,6 +22,8 @@
 #include "hcvloop.h"
 #include <stdlib.h>
 
+int jpeg_save_image (ImageBuffer *, FILE *);
+
 static char * get_filename (V4l2Device *dev)
 {
 	#define NAME_SIZE 80
@@ -34,8 +36,7 @@ static char * get_filename (V4l2Device *dev)
 	return name;
 }
 
-int save_image_name (int save_image (ImageBuffer *, FILE *),
-	ImageBuffer *image, char *name)
+int save_image (ImageBuffer *image, char *name)
 {
 	int r;
 	FILE *file;
@@ -46,7 +47,7 @@ int save_image_name (int save_image (ImageBuffer *, FILE *),
 		return 1;
 	}
 
-	r = save_image (image, file);
+	r = jpeg_save_image (image, file);
 
 	fclose (file);
 
@@ -59,7 +60,7 @@ int save_picture (V4l2Device *device)
 	char *name = get_filename (device);
 	if (!name)
 		return 1;
-	r = save_image_name (device->save_image, &device->image, name);
+	r = save_image (&device->image, name);
 	free (name);
 	return r;
 }

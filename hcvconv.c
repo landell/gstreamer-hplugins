@@ -1,5 +1,6 @@
 /*
  *  Copyright (C) 2008  Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+ *  Copyright (C) 2009  Samuel R. C. Vale <srcvale@holoscopio.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,62 +23,19 @@
 #include "device.h"
 #include "hcvmemsrc.h"
 #include <jpeglib.h>
-#include "facetracker.h"
 
-static int raw_save_image (ImageBuffer *image, FILE *file)
-{
-	fwrite (image->data, image->len, 1, file);
-	return 0;
-}
-
-static int realjpegcode_save_image (ImageBuffer *image, FILE *file)
-{
-	struct jpeg_compress_struct compress;
-	struct jpeg_error_mgr emgr;
-	int i;
-	JSAMPROW p;
-	compress.err = jpeg_std_error (&emgr);
-	jpeg_create_compress (&compress);
-	compress.in_color_space = JCS_YCbCr;
-	jpeg_set_defaults (&compress);
-	jpeg_stdio_dest (&compress, file);
-	compress.image_width = image->fmt.width;
-	compress.image_height = image->fmt.height;
-	compress.input_components = 3;
-	jpeg_start_compress (&compress, TRUE);
-	p = (JSAMPROW) image->data;
-	for (i = 0; i < image->fmt.height; i++)
-	{
-		jpeg_write_scanlines (&compress, &p, 1);
-		p += image->fmt.bytesperline;
-	}
-	jpeg_finish_compress (&compress);
-	return 0;
-}
-
-static int jpegcode_save_image (ImageBuffer *image, FILE *file)
-{
-  ImageBuffer *face;
-  int r;
-  face = image_facetracker (image);
-  if (face == NULL)
-    return realjpegcode_save_image (image, file);
-  r = realjpegcode_save_image (face, file);
-  free (face->data);
-  free (face);
-  return r;
-}
-
-static int yuyv_save_image (ImageBuffer *image, FILE *file)
+static ImageBuffer* yuyv_image (ImageBuffer *image)
 {
 	ImageBuffer *dst;
 	int i;
 	int height = image->fmt.height;
 	int width = image->fmt.width;
 	unsigned char *data = image->data;
+
 	dst = malloc (sizeof (ImageBuffer));
 	if (dst == NULL)
-		return 1;
+		return NULL;
+
 	dst->fmt.height = height;
 	dst->fmt.width = width;
 	dst->fmt.pixelformat = V4L2_PIX_FMT_YUV420;
@@ -87,8 +45,9 @@ static int yuyv_save_image (ImageBuffer *image, FILE *file)
 	if (dst->data == NULL)
 	{
 		free (dst);
-		return 1;
+		return NULL;
 	}
+
 	for (i = 0; i < height * width; i++)
 	{
 		/* Y */
@@ -101,19 +60,13 @@ static int yuyv_save_image (ImageBuffer *image, FILE *file)
 			dst->data[3*i+2] = dst->data[3*i+5] = data[2*i+3];
 		}
 	}
-	
-	jpegcode_save_image (dst, file);
 
-	free (dst->data);
-	free (dst);
-
-	return 0;
-
+	return dst;
 }
 
-char *headerfn = "/var/lib/hcv/header.jpg";
+static char *headerfn = "/var/lib/hcv/header.jpg";
 
-static int mjpeg_save_image (ImageBuffer *image, FILE *file)
+static ImageBuffer* mjpeg_image (ImageBuffer *image)
 {
 	ImageBuffer *dst;
 	struct jpeg_decompress_struct decompress;
@@ -124,9 +77,11 @@ static int mjpeg_save_image (ImageBuffer *image, FILE *file)
 	int height;
 	int width;
 	unsigned char *data;
+
 	dst = malloc (sizeof (ImageBuffer));
 	if (dst == NULL)
-		return 1;
+		return NULL;
+
 	decompress.err = jpeg_std_error (&emgr);
 	jpeg_create_decompress (&decompress);
 	headerfile = fopen (headerfn, "r");
@@ -134,7 +89,7 @@ static int mjpeg_save_image (ImageBuffer *image, FILE *file)
 	{
 		free (dst);
 		jpeg_destroy_decompress (&decompress);
-		return 1;
+		return NULL;
 	}
 	jpeg_stdio_src (&decompress, headerfile);
 	jpeg_read_header (&decompress, FALSE);
@@ -153,7 +108,7 @@ static int mjpeg_save_image (ImageBuffer *image, FILE *file)
 	{
 		free (dst);
 		jpeg_destroy_decompress (&decompress);
-		return 1;
+		return NULL;
 	}
 	p = (JSAMPROW) data;
 	for (i = 0; i < dst->fmt.height; i++)
@@ -163,27 +118,27 @@ static int mjpeg_save_image (ImageBuffer *image, FILE *file)
 	}
 	jpeg_finish_decompress (&decompress);
 	jpeg_destroy_decompress (&decompress);
-	jpegcode_save_image (dst, file);
-	free (dst->data);
-	free (dst);
-	return 0;
+
+	return dst;
 }
 
-void
-device_savepipe (V4l2Device *dev)
+ImageBuffer* image_convert_format (ImageBuffer *img)
 {
-	switch (dev->pixelformat)
+	ImageBuffer *ret;
+	switch (img->fmt.pixelformat)
 	{
 		case V4L2_PIX_FMT_MJPEG:
-			dev->save_image = mjpeg_save_image;
+			ret = mjpeg_image (img);
 			break;
 		case V4L2_PIX_FMT_YUV420:
-			dev->save_image = jpegcode_save_image;
+			/* native format */
+			ret = img;
 			break;
 		case V4L2_PIX_FMT_YUYV:
-			dev->save_image = yuyv_save_image;
+			ret = yuyv_image (img);
 			break;
 		default:
-			dev->save_image = raw_save_image;
+			ret = NULL;
 	}
+	return ret;
 }
