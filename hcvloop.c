@@ -62,7 +62,12 @@ static char * filenamenumber (char *prefix, int n)
 	return name;
 }
 
-static void save_queue (V4l2Device *device)
+static void process_image (ImageBuffer *image, FieldOptions *opt)
+{
+
+}
+
+static void process_queue (V4l2Device *device, FieldOptions *opt)
 {
 	int i;
 	char *name;
@@ -73,7 +78,10 @@ static void save_queue (V4l2Device *device)
 		name = filenamenumber (device->prefix, i);
 		image = &queue.buffers[(i + queue.top) % queue_size];
 		if (name != NULL && image->data != NULL && image->len != 0)
+		{
 			save_image_name (device->save_image, image, name);
+			process_image (image, opt);
+		}
 		if (name != NULL)
 			free (name);
 	}
@@ -131,7 +139,7 @@ int device_serie (V4l2Device *device, FieldOptions *opt)
 				enqueue_image (&device->image);
 		}
 	} while (countdown-- > 0);
-	save_queue (device);
+	process_queue (device, opt);
 	return 0;
 }
 
@@ -178,7 +186,7 @@ int device_loop (V4l2Device *device, FieldOptions *opt)
 		}
 		if (countdown > -1 && countdown-- == 0)
 		{
-			save_queue (device);
+			process_queue (device, opt);
 		}
 	}
 	return 0;
