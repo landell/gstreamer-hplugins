@@ -77,6 +77,7 @@ static void usage ()
 	"-d device	Path to device (default: /dev/video0)\n"
 	"-n number	Number of frames to take (max: %d, default: %d)\n"
 	"-s		Run as service (use v4l2capture-client to shot)\n"
+	"-f		Enable facetracking\n"
 	"-h		Show this help\n", MAX_QUEUE_SIZE, NFRAMES);
 }
 
@@ -98,7 +99,7 @@ int main (int argc, char **argv)
 		0
 	};
 
-	while ((c = getopt (argc, argv, "r:o:d:n:hs")) != -1)
+	while ((c = getopt (argc, argv, "r:o:d:n:hfs")) != -1)
 	{
 		switch (c)
 		{
@@ -124,6 +125,9 @@ int main (int argc, char **argv)
 				break;
 			case 's':
 				options.daemon = 1;
+				break;
+			case 'f':
+				options.facetracker = 1;
 				break;
 			case '?':
 			case 'h':
