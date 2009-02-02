@@ -78,6 +78,7 @@ static void usage ()
 	"-n number	Number of frames to take (max: %d, default: %d)\n"
 	"-s		Run as service (use v4l2capture-client to shot)\n"
 	"-f		Enable facetracking\n"
+	"-c		Crop detected faces\n"
 	"-h		Show this help\n", MAX_QUEUE_SIZE, NFRAMES);
 }
 
@@ -99,7 +100,7 @@ int main (int argc, char **argv)
 		0
 	};
 
-	while ((c = getopt (argc, argv, "r:o:d:n:hfs")) != -1)
+	while ((c = getopt (argc, argv, "r:o:d:n:hfcs")) != -1)
 	{
 		switch (c)
 		{
@@ -128,6 +129,9 @@ int main (int argc, char **argv)
 				break;
 			case 'f':
 				options.facetracker = 1;
+				break;
+			case 'c':
+				options.crop = 1;
 				break;
 			case '?':
 			case 'h':

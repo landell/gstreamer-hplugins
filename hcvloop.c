@@ -30,6 +30,7 @@
 #include "hcverror.h"
 #include "device.h"
 #include "facetracker.h"
+#include "crop.h"
 
 static int queue_size;
 
@@ -66,19 +67,22 @@ static char * filenamenumber (char *prefix, int n)
 
 static int process_image (ImageBuffer **image, FieldOptions *opt)
 {
-	ImageBuffer *image_aux, *face;
+	ImageBuffer *image_aux;
+	crop_window_t *window;
 
 	if ((*image = image_aux = image_convert_format (*image)) == NULL)
 		return 1;
 
-	if (opt->facetracker)
+	if (opt->facetracker || opt->crop)
 	{
-		if ((*image = face = image_facetracker (image_aux)) == NULL)
+		if ((window = image_facetracker (image_aux)) == NULL)
 		{
 			*image = image_aux;
 		}
-		else
+
+		if (opt->crop && window)
 		{
+			*image = image_crop (image_aux, window);
 			free (image_aux->data);
 			free (image_aux);
 		}

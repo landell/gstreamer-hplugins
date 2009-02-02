@@ -1,5 +1,6 @@
 /*
  *  Copyright (C) 2008  Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+ *  Copyright (C) 2009  Samuel R. C. Vale <srcvale@holoscopio.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +23,7 @@
 #include <stdlib.h>
 
 ImageBuffer *
-image_crop (ImageBuffer *src, int left, int top, int right, int bottom)
+image_crop (ImageBuffer *src, crop_window_t *win)
 {
 	ImageBuffer *dst;
 	int i;
@@ -31,8 +32,8 @@ image_crop (ImageBuffer *src, int left, int top, int right, int bottom)
 	dst = malloc (sizeof (ImageBuffer));
 	if (dst == NULL)
 		return NULL;
-	dst->fmt.height = bottom - top;
-	dst->fmt.width = right - left;
+	dst->fmt.height = win->bottom - win->top;
+	dst->fmt.width = win->right - win->left;
 	dst->fmt.pixelformat = src->fmt.pixelformat;
 	dst->fmt.bytesperline = dst->fmt.width * bpp;
 	dst->len = dst->fmt.height * dst->fmt.bytesperline;
@@ -42,10 +43,10 @@ image_crop (ImageBuffer *src, int left, int top, int right, int bottom)
 		free (dst);
 		return NULL;
 	}
-	for (i = top; i < bottom; i++)
+	for (i = win->top; i < win->bottom; i++)
 	{
-		int dline = (i - top) * dst->fmt.bytesperline;
-		int sline = (i * src->fmt.width + left) * bpp;
+		int dline = (i - win->top) * dst->fmt.bytesperline;
+		int sline = (i * src->fmt.width + win->left) * bpp;
 		memcpy (dst->data + dline, src->data + sline, dst->fmt.bytesperline);
 	}
 	return dst; 

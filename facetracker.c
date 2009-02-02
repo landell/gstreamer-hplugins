@@ -147,11 +147,12 @@ image_search (ImageBuffer *src, int *left, int *top, int *right, int *bottom)
 #define BORDER		15
 #define SCALE		8
 #define SIZE_CHECK(a, w) { a = (a < 0 ? 0 : a); a = (a > w ? w : a);}
-ImageBuffer *
+crop_window_t *
 image_facetracker (ImageBuffer *src)
 {
   ImageBuffer *tmp;
   ImageBuffer *tmp2;
+  crop_window_t *win;
   int err;
   int l, t, r, b, w, h;
   int wo, ho, ratio;
@@ -183,5 +184,10 @@ image_facetracker (ImageBuffer *src)
   b += BORDER * ratio; SIZE_CHECK(b, ho);
   r += BORDER * ratio; SIZE_CHECK(r, wo);
   t -= BORDER * ratio; SIZE_CHECK(t, ho);
-  return image_crop (src, l, t, r, b);
+  win = (crop_window_t *)malloc(sizeof(crop_window_t));
+  win->left = l;
+  win->top = t;
+  win->right = r;
+  win->bottom = b;
+  return win;
 }

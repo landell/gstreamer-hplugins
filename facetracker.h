@@ -20,7 +20,8 @@
 #define HCV_FACETRACKER_H
 
 #include "device.h"
+#include "crop.h"
 
-ImageBuffer * image_facetracker (ImageBuffer *);
+crop_window_t * image_facetracker (ImageBuffer *);
 
 #endif

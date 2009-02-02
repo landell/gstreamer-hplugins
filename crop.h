@@ -1,5 +1,6 @@
 /*
  *  Copyright (C) 2008  Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+ *  Copyright (C) 2009  Samuel R. C. Vale <srcvale@holoscopio.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,11 +22,18 @@
 
 #include "device.h"
 
+typedef struct {
+	int left;
+	int top;
+	int right;
+	int bottom;
+} crop_window_t;
+
 /* left, top, right, bottom */
 /* X-------
  * |      |
  * -------X
  */
-ImageBuffer * image_crop (ImageBuffer *src, int, int, int, int);
+ImageBuffer * image_crop (ImageBuffer *src, crop_window_t *window);
 
 #endif
