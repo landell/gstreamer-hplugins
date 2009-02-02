@@ -64,20 +64,34 @@ static char * filenamenumber (char *prefix, int n)
 	return name;
 }
 
-static ImageBuffer* process_image (ImageBuffer *image, FieldOptions *opt)
+static int process_image (ImageBuffer **image, FieldOptions *opt)
 {
-	ImageBuffer *face;
+	ImageBuffer *image_aux, *face;
 
-	face = image_facetracker (image);
-	
-	return face;
+	if ((*image = image_aux = image_convert_format (*image)) == NULL)
+		return 1;
+
+	if (opt->facetracker)
+	{
+		if ((*image = face = image_facetracker (image_aux)) == NULL)
+		{
+			*image = image_aux;
+		}
+		else
+		{
+			free (image_aux->data);
+			free (image_aux);
+		}
+	}
+
+	return 0;
 }
 
 static void process_queue (V4l2Device *device, FieldOptions *opt)
 {
 	int i;
 	char *name;
-	ImageBuffer *image, *image_tmp, *image_tmp2;
+	ImageBuffer *image, **image_aux;
 	fprintf (stderr, "Saving images...\n");
 	for (i = queue_size - 1; i >= 0; i--)
 	{
@@ -85,18 +99,9 @@ static void process_queue (V4l2Device *device, FieldOptions *opt)
 		image = &queue.buffers[(i + queue.top) % queue_size];
 		if (name != NULL && image->data != NULL && image->len != 0)
 		{
-			image_tmp = image_convert_format (image);
-			if (image_tmp == NULL)
-			{
-				free (name);
-				continue;
-			}
-			image_tmp2 = process_image (image_tmp, opt);
-			save_image (image_tmp2, name);
-			free (image_tmp->data);
-			free (image_tmp);
-			free (image_tmp2->data);
-			free (image_tmp2);
+			image_aux = &image;
+			if (process_image (image_aux, opt) == 0)
+				save_image (*image_aux, name);
 		}
 		if (name != NULL)
 			free (name);
