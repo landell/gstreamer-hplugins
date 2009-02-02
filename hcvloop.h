@@ -31,11 +31,11 @@ typedef struct {
 	union {
 		unsigned long flags;
 		struct {
-			unsigned int daemon :1;
-			unsigned int facetracker :1;
-			unsigned int crop :1;
-			unsigned int facemark :1;
-			unsigned int force_3x4 :1;
+			unsigned daemon :1;
+			unsigned facetracker :1;
+			unsigned crop :1;
+			unsigned facemark :1;
+			unsigned force_3x4 :1;
 		};
 	};
 } FieldOptions;
