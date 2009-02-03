@@ -80,6 +80,7 @@ static void usage ()
 	"-f		Enable facetracking\n"
 	"-c		Crop detected faces\n"
 	"-p		Force 3x4 ratio format to face detection\n"
+	"-m		Draw a green rectangle in detected faces\n"
 	"-h		Show this help\n", MAX_QUEUE_SIZE, NFRAMES);
 }
 
@@ -101,7 +102,7 @@ int main (int argc, char **argv)
 		0
 	};
 
-	while ((c = getopt (argc, argv, "r:o:d:n:hfcsp")) != -1)
+	while ((c = getopt (argc, argv, "r:o:d:n:hfcspm")) != -1)
 	{
 		switch (c)
 		{
@@ -136,6 +137,9 @@ int main (int argc, char **argv)
 				break;
 			case 'p':
 				options.force_3x4 = 1;
+				break;
+			case 'm':
+				options.facemark = 1;
 				break;
 			case '?':
 			case 'h':

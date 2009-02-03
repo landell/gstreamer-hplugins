@@ -93,6 +93,13 @@ static int process_image (ImageBuffer **image, FieldOptions *opt)
 			free (image_aux->data);
 			free (image_aux);
 		}
+
+		if (!opt->crop && opt->facemark && window && !ret)
+		{
+			*image = image_mark (image_aux, window);
+			free (image_aux->data);
+			free (image_aux);
+		}
 	}
 
 	return 0;
