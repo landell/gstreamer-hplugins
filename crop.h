@@ -34,7 +34,8 @@ typedef struct {
  * |      |
  * -------X
  */
-ImageBuffer * image_crop (ImageBuffer *src, crop_window_t *window);
+ImageBuffer * image_mark (ImageBuffer *src, crop_window_t *win);
+ImageBuffer * image_crop (ImageBuffer *src, crop_window_t *win);
 int crop_format_3x4 (crop_window_t *win, int w_max, int h_max);
 
 #endif

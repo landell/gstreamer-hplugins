@@ -23,6 +23,53 @@
 #include <stdlib.h>
 
 ImageBuffer *
+image_mark (ImageBuffer *src, crop_window_t *win)
+{
+	ImageBuffer *dst;
+	int i;
+	unsigned char *d1;
+	unsigned char *d2;
+	/* FIXME: assuming bytes per pixel is 3 */
+	int bpp = 3;
+	dst = malloc (sizeof (ImageBuffer));
+	if (dst == NULL)
+		return NULL;
+	dst->fmt.height = src->fmt.height;
+	dst->fmt.width = src->fmt.width;
+	dst->fmt.pixelformat = src->fmt.pixelformat;
+	dst->fmt.bytesperline = dst->fmt.width * bpp;
+	dst->len = dst->fmt.height * dst->fmt.bytesperline;
+	dst->data = malloc (dst->len);
+	if (dst->data == NULL)
+	{
+		free (dst);
+		return NULL;
+	}
+	memcpy (dst->data, src->data, dst->len);
+	d1 = dst->data + win->top * dst->fmt.bytesperline + win->left * bpp;
+	d2 = dst->data + win->bottom * dst->fmt.bytesperline + win->left * bpp;
+	for (i = win->left; i < win->right; i++)
+	{
+		d1[0] = d2[0] = 0xFF;
+		d1[1] = d2[1] = 0x00;
+		d1[2] = d2[2] = 0x00;
+		d1 += 3;
+		d2 += 3;
+	}
+	d1 = dst->data + win->top * dst->fmt.bytesperline + win->left * bpp;
+	d2 = dst->data + win->top * dst->fmt.bytesperline + win->right * bpp;
+	for (i = win->top; i < win->bottom; i++)
+	{
+		d1[0] = d2[0] = 0xFF;
+		d1[1] = d2[1] = 0x00;
+		d1[2] = d2[2] = 0x00;
+		d1 += dst->fmt.bytesperline;
+		d2 += dst->fmt.bytesperline;
+	}
+	return dst;
+}
+
+ImageBuffer *
 image_crop (ImageBuffer *src, crop_window_t *win)
 {
 	ImageBuffer *dst;
