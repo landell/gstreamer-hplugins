@@ -69,6 +69,7 @@ static int process_image (ImageBuffer **image, FieldOptions *opt)
 {
 	ImageBuffer *image_aux;
 	crop_window_t *window;
+	int ret = 0;
 
 	if ((*image = image_aux = image_convert_format (*image)) == NULL)
 		return 1;
@@ -80,7 +81,13 @@ static int process_image (ImageBuffer **image, FieldOptions *opt)
 			*image = image_aux;
 		}
 
-		if (opt->crop && window)
+		if (opt->force_3x4 && window)
+		{
+			ret = crop_format_3x4 (window,
+				image_aux->fmt.width, image_aux->fmt.height);
+		}
+
+		if (opt->crop && window && !ret)
 		{
 			*image = image_crop (image_aux, window);
 			free (image_aux->data);

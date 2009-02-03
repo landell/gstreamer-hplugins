@@ -79,6 +79,7 @@ static void usage ()
 	"-s		Run as service (use v4l2capture-client to shot)\n"
 	"-f		Enable facetracking\n"
 	"-c		Crop detected faces\n"
+	"-p		Force 3x4 ratio format to face detection\n"
 	"-h		Show this help\n", MAX_QUEUE_SIZE, NFRAMES);
 }
 
@@ -100,7 +101,7 @@ int main (int argc, char **argv)
 		0
 	};
 
-	while ((c = getopt (argc, argv, "r:o:d:n:hfcs")) != -1)
+	while ((c = getopt (argc, argv, "r:o:d:n:hfcsp")) != -1)
 	{
 		switch (c)
 		{
@@ -132,6 +133,9 @@ int main (int argc, char **argv)
 				break;
 			case 'c':
 				options.crop = 1;
+				break;
+			case 'p':
+				options.force_3x4 = 1;
 				break;
 			case '?':
 			case 'h':

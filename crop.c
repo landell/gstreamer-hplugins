@@ -51,3 +51,62 @@ image_crop (ImageBuffer *src, crop_window_t *win)
 	}
 	return dst; 
 }
+
+int crop_format_3x4 (crop_window_t *win, int w_max, int h_max)
+{
+	int w, h, fix;
+
+	if (!win)
+		return 1;
+	
+	w = win->right - win->left;
+	h = win->bottom - win->top;
+
+	/* Testing ratio. Ratio must be (w*4 == h*3). */
+	if ((4 * w) > (3 * h))
+	{
+		fix = (4 * w / 3) - h;
+		fix += (fix % 2) ? 0 : 1;
+		win->bottom += fix / 2;
+		win->top -= fix / 2;
+	}
+	else
+	{
+		fix = (3 * h / 4) - w;
+		fix += (fix % 2) ? 0 : 1;
+		win->right += fix / 2;
+		win->left -= fix / 2;
+	}
+	
+	/* Testing limits */
+	if (win->top < 0)
+	{
+		win->bottom += - win->top;
+		win->top = 0;
+	}
+
+	if (win->bottom >= h_max)
+	{
+		win->top -= (win->bottom - h_max) + 1;
+		win->bottom = h_max - 1;
+	}
+
+	if (win->right < 0)
+	{
+		win->left += - win->right;
+		win->right = 0;
+	}
+
+	if (win->left >= w_max)
+	{
+		win->right -= (win->left - w_max) + 1;
+		win->left = w_max - 1;
+	}
+
+	/* Drop an error if any limit is reached yet */
+	if ((win->top < 0) || (win->bottom >= h_max) ||
+		(win->right < 0) || (win->left >= w_max))
+		return 1;
+
+	return 0;
+}
