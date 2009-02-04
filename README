@@ -1,4 +1,4 @@
-Copyright 2008 Samuel R. C. Vale <srcvale@holoscopio.com>
+Copyright 2008-2009 Samuel R. C. Vale <srcvale@holoscopio.com>
 
 This software was based on V4L2 Documentation, and luvcview (Copyright
 2005 2006 2007 Laurent Pinchart, Michel Xhaard, and 2006 Gabriel A.
@@ -27,6 +27,8 @@ flexible parammeters to well suit on shell scripts.
 V4l2 capture was mostly tested with UVC cameras. By now, v4l2capture
 support devices that provide MJPEG/JPEG and RAW streams.
 
+New features that are included: facetracking, cropping, and service
+mode, activated by comand line options.
 
 2. Credits
 
@@ -40,21 +42,28 @@ Gabriel A. Devenyi).
 
 3. Building
 
-To build v4l2capture:
+Fist, we need the libjpeg installed. So, to build v4l2capture just use:
 
 $> make
 
 
 4. Running
 
-Running with parameters, v4l2capture will try take a 320x240 image from
-/dev/video0, with timeout of 1000ms and can try 3 times, saving it as
-"image.jpg".
+Running without parameters, v4l2capture will try take 10 320x240 images
+from /dev/video0, saving them as "image-x.jpg".
 
--r resolution - image resolution, on format "WxH";
--o output_prefix - the name of output file, without extension;
--d device name - path to v4l2 device;
--h - help sumary;
+Parameters:
+
+-r resolution	Image resolution WxH (default: 320x240)
+-o prefix	Output prefix (default: ./image)
+-d device	Path to device (default: /dev/video0)
+-n number	Number of frames to take (max: 20, default: 10)
+-s		Run as service (use v4l2capture-client to shot)
+-f		Enable facetracking
+-c		Crop detected faces
+-p		Force 3x4 ratio format to face detection
+-m		Draw a green rectangle in detected faces
+-h		Show this help
 
 5. Issues
 
