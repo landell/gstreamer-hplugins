@@ -5,9 +5,10 @@ LIBS = -ljpeg
 CC := $(CROSS_COMPILE)$(GCC) $(CFLAGS)
 OBJECTS = v4l2capture.o device.o negotiation.o hcverror.o hcvloop.o \
 	hcvconv.o crop.o save.o savejpeg.o hcvmemsrc.o facetracker.o
-INSTALL_DIR = /usr/bin/
-RUNTIME_DIR = /var/run/hcv
-DATA_DIR = /var/lib/hcv
+DESTDIR ?=
+INSTALL_DIR := $(DESTDIR)/usr/bin/
+RUNTIME_DIR := $(DESTDIR)/var/run/hcv
+DATA_DIR := $(DESTDIR)/var/lib/hcv
 HEADER_FILE = $(DATA_DIR)/header.jpg
 
 all: v4l2capture v4l2capture-client jheader
