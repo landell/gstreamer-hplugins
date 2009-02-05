@@ -24,7 +24,7 @@ v4l2capture-client: client.o
 v4l2capture: $(OBJECTS)
 	$(CC) -o v4l2capture $(OBJECTS) $(LIBS)
 
-install:
+install: all
 	cp v4l2capture $(INSTALL_DIR)
 	cp v4l2capture-client $(INSTALL_DIR)
 	mkdir -p $(RUNTIME_DIR) $(DATA_DIR)
