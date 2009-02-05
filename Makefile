@@ -10,6 +10,7 @@ INSTALL_DIR := $(DESTDIR)/usr/bin/
 RUNTIME_DIR := $(DESTDIR)/var/run/hcv
 DATA_DIR := $(DESTDIR)/var/lib/hcv
 HEADER_FILE = $(DATA_DIR)/header.jpg
+FAKEROOT = fakeroot
 
 all: v4l2capture v4l2capture-client jheader
 
@@ -26,11 +27,10 @@ v4l2capture: $(OBJECTS)
 	$(CC) -o v4l2capture $(OBJECTS) $(LIBS)
 
 install: all
-	cp v4l2capture $(INSTALL_DIR)
-	cp v4l2capture-client $(INSTALL_DIR)
-	mkdir -p $(RUNTIME_DIR) $(DATA_DIR)
-	chown root.video $(RUNTIME_DIR) $(DATA_DIR)
-	chmod 775 $(RUNTIME_DIR) $(DATA_DIR)
+	install -D v4l2capture $(INSTALL_DIR)/v4l2capture
+	install -D v4l2capture-client $(INSTALL_DIR)/v4l2capture-client
+	$(FAKEROOT) install -D -o root -g video -d $(RUNTIME_DIR)
+	$(FAKEROOT) install -D -o root -g video -d $(DATA_DIR)
 	./jheader $(HEADER_FILE)
 
 clean:
