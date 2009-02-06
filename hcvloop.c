@@ -85,7 +85,7 @@ static ImageBuffer * process_image (ImageBuffer *image, FieldOptions *opt)
 	{
 		ret = crop_format_3x4 (window,
 			image_aux->fmt.width, image_aux->fmt.height);
-		if (!ret)
+		if (ret)
 			goto out;
 	}
 
