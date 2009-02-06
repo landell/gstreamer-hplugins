@@ -32,7 +32,6 @@ typedef struct {
 		unsigned long flags;
 		struct {
 			unsigned daemon :1;
-			unsigned facetracker :1;
 			unsigned crop :1;
 			unsigned facemark :1;
 			unsigned force_3x4 :1;

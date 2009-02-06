@@ -59,7 +59,6 @@ Parameters:
 -d device	Path to device (default: /dev/video0)
 -n number	Number of frames to take (max: 20, default: 10)
 -s		Run as service (use v4l2capture-client to shot)
--f		Enable facetracking
 -c		Crop detected faces
 -p		Force 3x4 ratio format to face detection
 -m		Draw a green rectangle in detected faces

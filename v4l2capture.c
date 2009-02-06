@@ -77,7 +77,6 @@ static void usage ()
 	"-d device	Path to device (default: /dev/video0)\n"
 	"-n number	Number of frames to take (max: %d, default: %d)\n"
 	"-s		Run as service (use v4l2capture-client to shot)\n"
-	"-f		Enable facetracking\n"
 	"-c		Crop detected faces\n"
 	"-p		Force 3x4 ratio format to face detection\n"
 	"-m		Draw a green rectangle in detected faces\n"
@@ -102,7 +101,7 @@ int main (int argc, char **argv)
 		0
 	};
 
-	while ((c = getopt (argc, argv, "r:o:d:n:hfcspm")) != -1)
+	while ((c = getopt (argc, argv, "r:o:d:n:hcspm")) != -1)
 	{
 		switch (c)
 		{
@@ -128,9 +127,6 @@ int main (int argc, char **argv)
 				break;
 			case 's':
 				options.daemon = 1;
-				break;
-			case 'f':
-				options.facetracker = 1;
 				break;
 			case 'c':
 				options.crop = 1;
