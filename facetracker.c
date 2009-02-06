@@ -146,7 +146,7 @@ image_search (ImageBuffer *src, int *left, int *top, int *right, int *bottom)
 #define MIN_SIZE	2
 #define BORDER		15
 #define SCALE		8
-#define SIZE_CHECK(a, w) { a = (a < 0 ? 0 : a); a = (a > w ? w : a);}
+#define SIZE_CHECK(a, w) { a = (a < 0 ? 0 : a); a = (a >= w ? (w-1) : a);}
 crop_window_t *
 image_facetracker (ImageBuffer *src)
 {
