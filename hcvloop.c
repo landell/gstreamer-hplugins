@@ -74,34 +74,29 @@ static int process_image (ImageBuffer **image, FieldOptions *opt)
 	if ((*image = image_aux = image_convert_format (*image)) == NULL)
 		return 1;
 
-	if (opt->facetracker || opt->crop)
+	if (!opt->facemark && !opt->crop)
+		return 0;
+
+	if ((window = image_facetracker (image_aux)) == NULL)
+		return 0;
+
+	if (opt->force_3x4)
 	{
-		if ((window = image_facetracker (image_aux)) == NULL)
-		{
-			*image = image_aux;
-		}
-
-		if (opt->force_3x4 && window)
-		{
-			ret = crop_format_3x4 (window,
-				image_aux->fmt.width, image_aux->fmt.height);
-		}
-
-		if (opt->crop && window && !ret)
-		{
-			*image = image_crop (image_aux, window);
-			free (image_aux->data);
-			free (image_aux);
-		}
-
-		if (!opt->crop && opt->facemark && window && !ret)
-		{
-			*image = image_mark (image_aux, window);
-			free (image_aux->data);
-			free (image_aux);
-		}
+		ret = crop_format_3x4 (window,
+			image_aux->fmt.width, image_aux->fmt.height);
+		if (!ret)
+			goto out;
 	}
 
+	if (opt->crop)
+		*image = image_crop (image_aux, window);
+	else if (opt->facemark)
+		*image = image_mark (image_aux, window);
+
+	free (image_aux->data);
+	free (image_aux);
+out:
+	free (window);
 	return 0;
 }
 
