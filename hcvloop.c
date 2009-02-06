@@ -65,20 +65,21 @@ static char * filenamenumber (char *prefix, int n)
 	return name;
 }
 
-static int process_image (ImageBuffer **image, FieldOptions *opt)
+static ImageBuffer * process_image (ImageBuffer *image, FieldOptions *opt)
 {
 	ImageBuffer *image_aux;
+	ImageBuffer *face;
 	crop_window_t *window;
 	int ret = 0;
 
-	if ((*image = image_aux = image_convert_format (*image)) == NULL)
-		return 1;
+	if ((face = image_aux = image_convert_format (image)) == NULL)
+		return NULL;
 
 	if (!opt->facemark && !opt->crop)
-		return 0;
+		return face;
 
 	if ((window = image_facetracker (image_aux)) == NULL)
-		return 0;
+		return face;
 
 	if (opt->force_3x4)
 	{
@@ -89,22 +90,22 @@ static int process_image (ImageBuffer **image, FieldOptions *opt)
 	}
 
 	if (opt->crop)
-		*image = image_crop (image_aux, window);
+		face = image_crop (image_aux, window);
 	else if (opt->facemark)
-		*image = image_mark (image_aux, window);
+		face = image_mark (image_aux, window);
 
 	free (image_aux->data);
 	free (image_aux);
 out:
 	free (window);
-	return 0;
+	return face;
 }
 
 static void process_queue (V4l2Device *device, FieldOptions *opt)
 {
 	int i;
 	char *name;
-	ImageBuffer *image, **image_aux;
+	ImageBuffer *image, *image_aux;
 	fprintf (stderr, "Saving images...\n");
 	for (i = queue_size - 1; i >= 0; i--)
 	{
@@ -112,9 +113,12 @@ static void process_queue (V4l2Device *device, FieldOptions *opt)
 		image = &queue.buffers[(i + queue.top) % queue_size];
 		if (name != NULL && image->data != NULL && image->len != 0)
 		{
-			image_aux = &image;
-			if (process_image (image_aux, opt) == 0)
-				save_image (*image_aux, name);
+			if ((image_aux = process_image (image, opt)) != NULL)
+			{
+				save_image (image_aux, name);
+				free (image_aux->data);
+				free (image_aux);
+			}
 		}
 		if (name != NULL)
 			free (name);
