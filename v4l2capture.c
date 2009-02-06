@@ -126,16 +126,16 @@ int main (int argc, char **argv)
 				}
 				break;
 			case 's':
-				options.daemon = 1;
+				options.flags |= FO_DAEMON;
 				break;
 			case 'c':
-				options.crop = 1;
+				options.flags |= FO_CROP;
 				break;
 			case 'p':
-				options.force_3x4 = 1;
+				options.flags |= FO_3X4;
 				break;
 			case 'm':
-				options.facemark = 1;
+				options.flags |= FO_MARK;
 				break;
 			case '?':
 			case 'h':

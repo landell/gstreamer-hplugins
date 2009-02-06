@@ -75,13 +75,13 @@ static ImageBuffer * process_image (ImageBuffer *image, FieldOptions *opt)
 	if ((face = image_aux = image_convert_format (image)) == NULL)
 		return NULL;
 
-	if (!opt->facemark && !opt->crop)
+	if (!(opt->flags & (FO_MARK | FO_CROP)))
 		return face;
 
 	if ((window = image_facetracker (image_aux)) == NULL)
 		return face;
 
-	if (opt->force_3x4)
+	if (opt->flags & FO_3X4)
 	{
 		ret = crop_format_3x4 (window,
 			image_aux->fmt.width, image_aux->fmt.height);
@@ -89,9 +89,9 @@ static ImageBuffer * process_image (ImageBuffer *image, FieldOptions *opt)
 			goto out;
 	}
 
-	if (opt->crop)
+	if (opt->flags & FO_CROP)
 		face = image_crop (image_aux, window);
-	else if (opt->facemark)
+	else if (opt->flags & FO_MARK)
 		face = image_mark (image_aux, window);
 
 	free (image_aux->data);
@@ -235,7 +235,7 @@ int device_shot (V4l2Device *device, FieldOptions *opt)
 	int (* fp)(V4l2Device *, FieldOptions *);
 	int ret;
 
-	fp = (opt->daemon ? device_loop : device_serie);
+	fp = ((opt->flags & FO_DAEMON) ? device_loop : device_serie);
 	ret = (*fp)(device, opt);
 
 	return ret;

@@ -28,16 +28,13 @@
 
 typedef struct {
 	int nframes;
-	union {
-		unsigned long flags;
-		struct {
-			unsigned daemon :1;
-			unsigned crop :1;
-			unsigned facemark :1;
-			unsigned force_3x4 :1;
-		};
-	};
+	unsigned long flags;
 } FieldOptions;
+
+#define FO_DAEMON	0x0001
+#define FO_CROP		0x0002
+#define FO_MARK		0x0004
+#define FO_3X4		0x0008
 
 int save_picture (V4l2Device *);
 int save_image (ImageBuffer *, char *);
