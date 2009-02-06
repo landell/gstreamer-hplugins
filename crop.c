@@ -79,8 +79,8 @@ image_crop (ImageBuffer *src, crop_window_t *win)
 	dst = malloc (sizeof (ImageBuffer));
 	if (dst == NULL)
 		return NULL;
-	dst->fmt.height = win->bottom - win->top;
-	dst->fmt.width = win->right - win->left;
+	dst->fmt.height = win->bottom - win->top + 1;
+	dst->fmt.width = win->right - win->left + 1;
 	dst->fmt.pixelformat = src->fmt.pixelformat;
 	dst->fmt.bytesperline = dst->fmt.width * bpp;
 	dst->len = dst->fmt.height * dst->fmt.bytesperline;
@@ -90,7 +90,7 @@ image_crop (ImageBuffer *src, crop_window_t *win)
 		free (dst);
 		return NULL;
 	}
-	for (i = win->top; i < win->bottom; i++)
+	for (i = win->top; i <= win->bottom; i++)
 	{
 		int dline = (i - win->top) * dst->fmt.bytesperline;
 		int sline = (i * src->fmt.width + win->left) * bpp;
