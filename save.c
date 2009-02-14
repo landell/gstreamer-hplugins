@@ -53,14 +53,3 @@ int save_image (ImageBuffer *image, char *name)
 
 	return r;
 }
-
-int save_picture (V4l2Device *device)
-{
-	int r;
-	char *name = get_filename (device);
-	if (!name)
-		return 1;
-	r = save_image (&device->image, name);
-	free (name);
-	return r;
-}

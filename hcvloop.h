@@ -36,7 +36,6 @@ typedef struct {
 #define FO_MARK		0x0004
 #define FO_3X4		0x0008
 
-int save_picture (V4l2Device *);
 int save_image (ImageBuffer *, char *);
 int device_serie (V4l2Device *, FieldOptions *);
 int device_loop (V4l2Device *, FieldOptions *);
