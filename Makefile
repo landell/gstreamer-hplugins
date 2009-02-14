@@ -14,11 +14,14 @@ FAKEROOT = fakeroot
 
 all: v4l2capture v4l2capture-client jheader
 
+jheader.o: jheader.c
+	$(GCC) -c -o $@ $<
+
 .c.o:
 	$(CC) -c -o $@ $<
 
 jheader: jheader.o
-	$(CC) -o jheader jheader.o $(LIBS)
+	$(GCC) -o jheader jheader.o $(LIBS)
 
 v4l2capture-client: client.o
 	$(CC) -o v4l2capture-client client.o
