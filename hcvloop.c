@@ -58,10 +58,11 @@ static void enqueue_image (ImageBuffer *image)
 
 static char * filenamenumber (char *prefix, int n)
 {
-	char *name = malloc (strlen (prefix) + 32);
+	size_t len = strlen (prefix) + 32;
+	char *name = malloc (len);
 	if (!name)
 		return NULL;
-	sprintf (name, "%s-%d.jpg", prefix, n + 1);
+	snprintf (name, len, "%s-%d.jpg", prefix, n + 1);
 	return name;
 }
 
