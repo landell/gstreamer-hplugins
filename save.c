@@ -24,18 +24,6 @@
 
 int jpeg_save_image (ImageBuffer *, FILE *);
 
-static char * get_filename (V4l2Device *dev)
-{
-	#define NAME_SIZE 80
-	char *name = NULL;
-
-	name = malloc(NAME_SIZE);
-	if (!name)
-		return NULL;
-	snprintf (name, NAME_SIZE, "%s.jpg", dev->prefix);
-	return name;
-}
-
 int save_image (ImageBuffer *image, char *name)
 {
 	int r;
