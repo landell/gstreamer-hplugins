@@ -146,8 +146,9 @@ int main (int argc, char **argv)
 	}
 
 	device.name = device_name;
-	device.prefix = file_prefix;
 	device.fps = DEFAULT_FPS;
+
+	options.prefix = file_prefix;
 
 	if (get_resolution (res_code, &device.width, &device.height))
 	{

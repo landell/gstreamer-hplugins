@@ -60,7 +60,6 @@ typedef struct {
 	char *name;
 	int width;
 	int height;
-	char *prefix;
 	DeviceBuffer *buffer;
 	int n_buffers;
 	int fps;

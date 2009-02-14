@@ -27,6 +27,7 @@
 #define MAX_QUEUE_SIZE 20
 
 typedef struct {
+	char *prefix;
 	int nframes;
 	unsigned long flags;
 } FieldOptions;

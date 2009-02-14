@@ -110,7 +110,7 @@ static void process_queue (V4l2Device *device, FieldOptions *opt)
 	fprintf (stderr, "Saving images...\n");
 	for (i = queue_size - 1; i >= 0; i--)
 	{
-		name = filenamenumber (device->prefix, i);
+		name = filenamenumber (opt->prefix, i);
 		image = &queue.buffers[(i + queue.top) % queue_size];
 		if (name != NULL && image->data != NULL && image->len != 0)
 		{
