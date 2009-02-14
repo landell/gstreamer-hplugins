@@ -38,6 +38,7 @@ typedef struct {
 #define FO_3X4		0x0008
 
 int save_image (ImageBuffer *, char *);
+int jpeg_save_image (ImageBuffer *, FILE *);
 int device_serie (V4l2Device *, FieldOptions *);
 int device_loop (V4l2Device *, FieldOptions *);
 int device_shot (V4l2Device *, FieldOptions *);

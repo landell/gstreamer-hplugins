@@ -21,6 +21,7 @@
 #include "device.h"
 #include <stdio.h>
 #include <jpeglib.h>
+#include "hcvloop.h"
 
 int jpeg_save_image (ImageBuffer *image, FILE *file)
 {

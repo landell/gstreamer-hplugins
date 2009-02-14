@@ -22,8 +22,6 @@
 #include "hcvloop.h"
 #include <stdlib.h>
 
-int jpeg_save_image (ImageBuffer *, FILE *);
-
 int save_image (ImageBuffer *image, char *name)
 {
 	int r;
