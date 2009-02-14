@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 #include "device.h"
+#include <stdio.h>
 #include <jpeglib.h>
 
 int jpeg_save_image (ImageBuffer *image, FILE *file)

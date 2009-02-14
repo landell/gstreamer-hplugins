@@ -19,6 +19,7 @@
 #ifndef HCV_MEMSRC_H
 #define HCV_MEMSRC_H
 
+#include <stdio.h>
 #include <jpeglib.h>
 #include "device.h"
 

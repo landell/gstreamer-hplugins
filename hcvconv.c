@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include "device.h"
 #include "hcvmemsrc.h"
+#include <stdio.h>
 #include <jpeglib.h>
 
 static ImageBuffer* yuyv_image (ImageBuffer *image)
