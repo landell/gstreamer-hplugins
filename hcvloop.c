@@ -68,61 +68,79 @@ static char * filenamenumber (char *prefix, int n)
 
 static ImageBuffer * process_image (ImageBuffer *image, FieldOptions *opt)
 {
-	ImageBuffer *image_aux;
-	ImageBuffer *face;
+	ImageBuffer *face = NULL;
 	crop_window_t *window;
 	int ret = 0;
 
-	if ((face = image_aux = image_convert_format (image)) == NULL)
+	if (!(opt->flags & (FO_MARK | FO_CROP)))
 		return NULL;
 
-	if (!(opt->flags & (FO_MARK | FO_CROP)))
-		return face;
-
-	if ((window = image_facetracker (image_aux)) == NULL)
-		return face;
+	if ((window = image_facetracker (image)) == NULL)
+		return NULL;
 
 	if (opt->flags & FO_3X4)
 	{
 		ret = crop_format_3x4 (window,
-			image_aux->fmt.width, image_aux->fmt.height);
+			image->fmt.width, image->fmt.height);
 		if (ret)
 			goto out;
 	}
 
 	if (opt->flags & FO_CROP)
-		face = image_crop (image_aux, window);
+		face = image_crop (image, window);
 	else if (opt->flags & FO_MARK)
-		face = image_mark (image_aux, window);
+		face = image_mark (image, window);
 
-	free (image_aux->data);
-	free (image_aux);
 out:
 	free (window);
 	return face;
 }
 
+static void process_save_image (ImageBuffer *image, int i, FieldOptions *opt)
+{
+	char *name;
+	ImageBuffer *convimage;
+	ImageBuffer *procimage;
+	name = filenamenumber (opt->prefix, i);
+	if (name == NULL)
+		return;
+	if (image->fmt.pixelformat != V4L2_PIX_FMT_YUV420)
+	{
+		image = convimage = image_convert_format (image);
+		if (convimage == NULL)
+			return;
+	}
+	procimage = process_image (image, opt);
+	if (procimage != NULL)
+	{
+		save_image (procimage, name, opt);
+		free (procimage->data);
+		free (procimage);
+	}
+	else
+	{
+		save_image (image, name, opt);
+	}
+	if (convimage)
+	{
+		free (convimage->data);
+		free (convimage);
+	}
+	free (name);
+}
+
 static void process_queue (V4l2Device *device, FieldOptions *opt)
 {
 	int i;
-	char *name;
-	ImageBuffer *image, *image_aux;
+	ImageBuffer *image;
 	fprintf (stderr, "Saving images...\n");
 	for (i = queue_size - 1; i >= 0; i--)
 	{
-		name = filenamenumber (opt->prefix, i);
 		image = &queue.buffers[(i + queue.top) % queue_size];
-		if (name != NULL && image->data != NULL && image->len != 0)
+		if (image->data != NULL && image->len != 0)
 		{
-			if ((image_aux = process_image (image, opt)) != NULL)
-			{
-				save_image (image_aux, name, opt);
-				free (image_aux->data);
-				free (image_aux);
-			}
+			process_save_image (image, i, opt);
 		}
-		if (name != NULL)
-			free (name);
 	}
 }
 
