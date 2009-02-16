@@ -1,6 +1,6 @@
 GCC = gcc
 CROSS_COMPILE ?=
-CFLAGS ?= -g -Wall
+CFLAGS ?= -g -Wall -Wextra
 LIBS = -ljpeg
 CC := $(CROSS_COMPILE)$(GCC) $(CFLAGS)
 OBJECTS = v4l2capture.o device.o negotiation.o hcverror.o hcvloop.o \
