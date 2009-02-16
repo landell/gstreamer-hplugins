@@ -50,7 +50,7 @@ image_mark (ImageBuffer *src, crop_window_t *win)
 	d2 = dst->data + win->bottom * dst->fmt.bytesperline + win->left * bpp;
 	for (i = win->left; i < win->right; i++)
 	{
-		d1[0] = d2[0] = 0xFF;
+		d1[0] = d2[0] = 0x00;
 		d1[1] = d2[1] = 0x00;
 		d1[2] = d2[2] = 0x00;
 		d1 += 3;
@@ -60,7 +60,7 @@ image_mark (ImageBuffer *src, crop_window_t *win)
 	d2 = dst->data + win->top * dst->fmt.bytesperline + win->right * bpp;
 	for (i = win->top; i < win->bottom; i++)
 	{
-		d1[0] = d2[0] = 0xFF;
+		d1[0] = d2[0] = 0x00;
 		d1[1] = d2[1] = 0x00;
 		d1[2] = d2[2] = 0x00;
 		d1 += dst->fmt.bytesperline;
