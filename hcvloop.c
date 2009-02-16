@@ -139,7 +139,7 @@ static void process_save_image (ImageBuffer *image, int i, FieldOptions *opt)
 	free (name);
 }
 
-static void process_queue (V4l2Device *device, FieldOptions *opt)
+static void process_queue (FieldOptions *opt)
 {
 	int i;
 	ImageBuffer *image;
@@ -206,7 +206,7 @@ int device_serie (V4l2Device *device, FieldOptions *opt)
 				enqueue_image (&device->image);
 		}
 	} while (countdown-- > 0);
-	process_queue (device, opt);
+	process_queue (opt);
 	return 0;
 }
 
@@ -253,7 +253,7 @@ int device_loop (V4l2Device *device, FieldOptions *opt)
 		}
 		if (countdown > -1 && countdown-- == 0)
 		{
-			process_queue (device, opt);
+			process_queue (opt);
 		}
 	}
 	return 0;
