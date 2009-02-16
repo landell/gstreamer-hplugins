@@ -80,6 +80,7 @@ static void usage ()
 	"-c		Crop detected faces\n"
 	"-p		Force 3x4 ratio format to face detection\n"
 	"-m		Draw a green rectangle in detected faces\n"
+	"-g		Save images as grayscale\n"
 	"-h		Show this help\n", MAX_QUEUE_SIZE, NFRAMES);
 }
 
@@ -101,7 +102,7 @@ int main (int argc, char **argv)
 		0
 	};
 
-	while ((c = getopt (argc, argv, "r:o:d:n:hcspm")) != -1)
+	while ((c = getopt (argc, argv, "r:o:d:n:hcspmg")) != -1)
 	{
 		switch (c)
 		{
@@ -136,6 +137,9 @@ int main (int argc, char **argv)
 				break;
 			case 'm':
 				options.flags |= FO_MARK;
+				break;
+			case 'g':
+				options.flags |= FO_GRAY;
 				break;
 			case '?':
 			case 'h':

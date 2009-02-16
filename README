@@ -85,6 +85,7 @@ Parameters:
 -c		Crop detected faces
 -p		Force 3x4 ratio format to face detection
 -m		Draw a green rectangle in detected faces
+-g		Save images as grayscale
 -h		Show this help
 
 

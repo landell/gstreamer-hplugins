@@ -36,6 +36,7 @@ typedef struct {
 #define FO_CROP		0x0002
 #define FO_MARK		0x0004
 #define FO_3X4		0x0008
+#define FO_GRAY		0x0010
 
 int save_image (ImageBuffer *, char *, FieldOptions *);
 int jpeg_save_image (ImageBuffer *, FILE *, int);

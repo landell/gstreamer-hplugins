@@ -26,6 +26,7 @@ int save_image (ImageBuffer *image, char *name, FieldOptions *opt)
 {
 	int r;
 	FILE *file;
+	ImageBuffer *grayimage = NULL;
 	file = fopen (name, "wb");
 
 	if (file == NULL)
@@ -33,7 +34,21 @@ int save_image (ImageBuffer *image, char *name, FieldOptions *opt)
 		return 1;
 	}
 
-	r = jpeg_save_image (image, file, 0);
+	if (opt->flags & FO_GRAY)
+	{
+		grayimage = image_convert_grayscale (image);
+	}
+
+	if (grayimage != NULL)
+	{
+		jpeg_save_image (grayimage, file, 1);
+		free (grayimage->data);
+		free (grayimage);
+	}
+	else
+	{
+		r = jpeg_save_image (image, file, 0);
+	}
 
 	fclose (file);
 
