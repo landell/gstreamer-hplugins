@@ -89,6 +89,21 @@ Parameters:
 -g		Save images as grayscale
 -h		Show this help
 
+5.1 Output prefix for full image
+
+If full images should also be saved, regardless of a face being
+detected, the filename prefix must be set.
+    
+If this prefix is not set, full images will be saved when a face is not
+detected or when face detection wasn't requested. Otherwise, cropped or
+marked faces will be saved instead of a full image.
+    
+When setting this prefix, full images will be saved using said prefix.
+All of them will be saved. If face detection is also requested, the
+other filename prefix will be used to save only those images where a
+face was detected. If no face detection was requested, only the full
+images with its prefix for full images will be saved.
+
 
 6. Issues
 
