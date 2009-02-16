@@ -43,5 +43,6 @@ int device_serie (V4l2Device *, FieldOptions *);
 int device_loop (V4l2Device *, FieldOptions *);
 int device_shot (V4l2Device *, FieldOptions *);
 ImageBuffer* image_convert_format (ImageBuffer *);
+ImageBuffer* image_convert_grayscale (ImageBuffer *);
 
 #endif

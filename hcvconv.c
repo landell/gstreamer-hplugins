@@ -143,3 +143,30 @@ ImageBuffer* image_convert_format (ImageBuffer *img)
 	}
 	return ret;
 }
+
+ImageBuffer* image_convert_grayscale (ImageBuffer *src)
+{
+	ImageBuffer *dst;
+	int i;
+	if (src->fmt.pixelformat !=  V4L2_PIX_FMT_YUV420)
+		return NULL;
+	dst = malloc (sizeof (ImageBuffer));
+	if (dst == NULL)
+		return NULL;
+	dst->fmt.height = src->fmt.height;
+	dst->fmt.width = src->fmt.width;
+	dst->fmt.pixelformat = V4L2_PIX_FMT_GREY;
+	dst->fmt.bytesperline = dst->fmt.width;
+	dst->len = dst->fmt.height * dst->fmt.bytesperline;
+	dst->data = malloc (dst->len);
+	if (dst->data == NULL)
+	{
+		free (dst);
+		return NULL;
+	}
+	for (i = 0; i < dst->len; i++)
+	{
+		dst->data[i] = src->data[i * 3];
+	}
+	return dst;
+}
