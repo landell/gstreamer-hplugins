@@ -23,7 +23,7 @@
 #include <jpeglib.h>
 #include "hcvloop.h"
 
-int jpeg_save_image (ImageBuffer *image, FILE *file)
+int jpeg_save_image (ImageBuffer *image, FILE *file, int gray)
 {
 	struct jpeg_compress_struct compress;
 	struct jpeg_error_mgr emgr;
@@ -31,12 +31,18 @@ int jpeg_save_image (ImageBuffer *image, FILE *file)
 	JSAMPROW p;
 	compress.err = jpeg_std_error (&emgr);
 	jpeg_create_compress (&compress);
-	compress.in_color_space = JCS_YCbCr;
+	if (gray)
+		compress.in_color_space = JCS_GRAYSCALE;
+	else
+		compress.in_color_space = JCS_YCbCr;
 	jpeg_set_defaults (&compress);
 	jpeg_stdio_dest (&compress, file);
 	compress.image_width = image->fmt.width;
 	compress.image_height = image->fmt.height;
-	compress.input_components = 3;
+	if (gray)
+		compress.input_components = 1;
+	else
+		compress.input_components = 3;
 	jpeg_start_compress (&compress, TRUE);
 	p = (JSAMPROW) image->data;
 	for (i = 0; i < image->fmt.height; i++)

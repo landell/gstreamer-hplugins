@@ -33,7 +33,7 @@ int save_image (ImageBuffer *image, char *name)
 		return 1;
 	}
 
-	r = jpeg_save_image (image, file);
+	r = jpeg_save_image (image, file, 0);
 
 	fclose (file);
 
