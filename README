@@ -79,6 +79,7 @@ Parameters:
 
 -r resolution	Image resolution WxH (default: 320x240)
 -o prefix	Output prefix (default: ./image)
+-f prefix	If set, output full image also, with given prefix
 -d device	Path to device (default: /dev/video0)
 -n number	Number of frames to take (max: 20, default: 10)
 -s		Run as service (use v4l2capture-client to shot)

@@ -38,6 +38,7 @@
 
 static char *res_code = "320x240";
 static char *file_prefix = "image";
+static char *file_prefix_full = NULL;
 static char *device_name = "/dev/video0";
 
 static int get_resolution (char *res, int *w, int *h)
@@ -74,6 +75,7 @@ static void usage ()
 	"Parameters:\n"
 	"-r resolution	Image resolution WxH (default: 320x240)\n"
 	"-o prefix	Output prefix (default: ./image)\n"
+	"-f prefix	If set, output full image also, with given prefix\n"
 	"-d device	Path to device (default: /dev/video0)\n"
 	"-n number	Number of frames to take (max: %d, default: %d)\n"
 	"-s		Run as service (use v4l2capture-client to shot)\n"
@@ -102,7 +104,7 @@ int main (int argc, char **argv)
 		0
 	};
 
-	while ((c = getopt (argc, argv, "r:o:d:n:hcspmg")) != -1)
+	while ((c = getopt (argc, argv, "r:o:f:d:n:hcspmg")) != -1)
 	{
 		switch (c)
 		{
@@ -111,6 +113,9 @@ int main (int argc, char **argv)
 				break;
 			case 'o':
 				file_prefix = optarg;
+				break;
+			case 'f':
+				file_prefix_full = optarg;
 				break;
 			case 'd':
 				device_name = optarg;
@@ -153,6 +158,7 @@ int main (int argc, char **argv)
 	device.fps = DEFAULT_FPS;
 
 	options.prefix = file_prefix;
+	options.prefix_full = file_prefix_full;
 
 	if (get_resolution (res_code, &device.width, &device.height))
 	{

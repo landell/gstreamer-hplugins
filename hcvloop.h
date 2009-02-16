@@ -28,6 +28,7 @@
 
 typedef struct {
 	char *prefix;
+	char *prefix_full;
 	int nframes;
 	unsigned long flags;
 } FieldOptions;

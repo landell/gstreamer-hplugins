@@ -99,6 +99,7 @@ out:
 static void process_save_image (ImageBuffer *image, int i, FieldOptions *opt)
 {
 	char *name;
+	char *name_full;
 	ImageBuffer *convimage;
 	ImageBuffer *procimage;
 	name = filenamenumber (opt->prefix, i);
@@ -110,6 +111,15 @@ static void process_save_image (ImageBuffer *image, int i, FieldOptions *opt)
 		if (convimage == NULL)
 			return;
 	}
+	if (opt->prefix_full != NULL)
+	{
+		name_full = filenamenumber (opt->prefix_full, i);
+		if (name_full != NULL)
+		{
+			save_image (image, name_full, opt);
+			free (name_full);
+		}
+	}
 	procimage = process_image (image, opt);
 	if (procimage != NULL)
 	{
@@ -117,7 +127,7 @@ static void process_save_image (ImageBuffer *image, int i, FieldOptions *opt)
 		free (procimage->data);
 		free (procimage);
 	}
-	else
+	else if (opt->prefix_full == NULL)
 	{
 		save_image (image, name, opt);
 	}
