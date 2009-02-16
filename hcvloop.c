@@ -116,7 +116,7 @@ static void process_queue (V4l2Device *device, FieldOptions *opt)
 		{
 			if ((image_aux = process_image (image, opt)) != NULL)
 			{
-				save_image (image_aux, name);
+				save_image (image_aux, name, opt);
 				free (image_aux->data);
 				free (image_aux);
 			}

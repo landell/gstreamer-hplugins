@@ -22,7 +22,7 @@
 #include "hcvloop.h"
 #include <stdlib.h>
 
-int save_image (ImageBuffer *image, char *name)
+int save_image (ImageBuffer *image, char *name, FieldOptions *opt)
 {
 	int r;
 	FILE *file;
