@@ -39,12 +39,17 @@ hcv_jpeg_term_source (j_decompress_ptr cinfo)
 static void
 hcv_jpeg_skip_input_data (j_decompress_ptr cinfo, long bytes)
 {
-	cinfo->src->next_input_byte += bytes;
-	cinfo->src->bytes_in_buffer -= bytes;
-	if (cinfo->src->bytes_in_buffer < 0)
+	if (bytes <= 0)
+		return;
+	if ((unsigned long) bytes > cinfo->src->bytes_in_buffer)
 	{
 		cinfo->src->bytes_in_buffer = 0;
 		cinfo->src->next_input_byte = NULL;
+	}
+	else
+	{
+		cinfo->src->next_input_byte += bytes;
+		cinfo->src->bytes_in_buffer -= bytes;
 	}
 }
 
