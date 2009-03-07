@@ -41,13 +41,13 @@ static char *file_prefix = "image";
 static char *file_prefix_full = NULL;
 static char *device_name = "/dev/video0";
 
-static int get_resolution (char *res, int *w, int *h)
+static int get_resolution (char *res, unsigned int *w, unsigned int *h)
 {
-	int W, H;
+	unsigned int W, H;
 	char *next;
 
 	errno = 0;
-	W = strtol (res, &next, 10);
+	W = strtoul (res, &next, 10);
 	if (errno == ERANGE)
 		return 1;
 	while (*next != 0 && isspace (*next)) next++;
@@ -55,7 +55,7 @@ static int get_resolution (char *res, int *w, int *h)
 		return 1;
 	next++;
 	errno = 0;
-	H = strtol (next, &next, 10);
+	H = strtoul (next, &next, 10);
 	if (errno == ERANGE)
 		return 1;
 

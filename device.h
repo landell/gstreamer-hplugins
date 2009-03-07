@@ -57,8 +57,8 @@ typedef struct {
 typedef struct {
 	int fd;
 	char *name;
-	int width;
-	int height;
+	unsigned int width;
+	unsigned int height;
 	DeviceBuffer *buffer;
 	int n_buffers;
 	int fps;
