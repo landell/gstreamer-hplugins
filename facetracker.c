@@ -29,7 +29,7 @@ static ImageBuffer *
 image_filter (ImageBuffer *src)
 {
   ImageBuffer *dst;
-  int i, j, k, l;
+  unsigned int i, j, k, l;
   if (src->fmt.pixelformat !=  V4L2_PIX_FMT_YUV420)
     return NULL;
   dst = malloc (sizeof (ImageBuffer));
@@ -61,10 +61,10 @@ image_filter (ImageBuffer *src)
 
 /* This receives the image in greyscale format, that is, GREY */
 static ImageBuffer *
-image_resize_subscale (ImageBuffer *src, int scale, int th)
+image_resize_subscale (ImageBuffer *src, unsigned int scale, unsigned int th)
 {
   ImageBuffer *dst;
-  int i, j, k, l, m, n, sum;
+  unsigned int i, j, k, l, m, n, sum;
   if (src->fmt.pixelformat !=  V4L2_PIX_FMT_GREY)
     return NULL;
   dst = malloc (sizeof (ImageBuffer));
@@ -105,8 +105,8 @@ image_resize_subscale (ImageBuffer *src, int scale, int th)
 static int
 image_search (ImageBuffer *src, int *left, int *top, int *right, int *bottom)
 {
-  int i, j;
-  int hmin, wmin, hmax, wmax;
+  unsigned int i, j;
+  unsigned int hmin, wmin, hmax, wmax;
   if (src->fmt.pixelformat !=  V4L2_PIX_FMT_GREY)
     return 1;
   hmin = src->fmt.height;

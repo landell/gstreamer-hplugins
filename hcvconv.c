@@ -73,7 +73,7 @@ static ImageBuffer* mjpeg_image (ImageBuffer *image)
 	struct jpeg_decompress_struct decompress;
 	struct jpeg_error_mgr emgr;
 	FILE *headerfile;
-	int i;
+	unsigned int i;
 	JSAMPROW p;
 	int height;
 	int width;
@@ -147,7 +147,7 @@ ImageBuffer* image_convert_format (ImageBuffer *img)
 ImageBuffer* image_convert_grayscale (ImageBuffer *src)
 {
 	ImageBuffer *dst;
-	int i;
+	unsigned int i;
 	if (src->fmt.pixelformat !=  V4L2_PIX_FMT_YUV420)
 		return NULL;
 	dst = malloc (sizeof (ImageBuffer));

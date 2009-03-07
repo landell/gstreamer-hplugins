@@ -27,7 +27,7 @@ int jpeg_save_image (ImageBuffer *image, FILE *file, int gray)
 {
 	struct jpeg_compress_struct compress;
 	struct jpeg_error_mgr emgr;
-	int i;
+	unsigned int i;
 	JSAMPROW p;
 	compress.err = jpeg_std_error (&emgr);
 	jpeg_create_compress (&compress);
