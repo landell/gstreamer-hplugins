@@ -70,7 +70,7 @@ int device_init (V4l2Device *dev)
 	struct v4l2_requestbuffers b_req;
 	struct v4l2_streamparm setfps;
 	unsigned int min;
-	int b;
+	unsigned int b;
 
 	memset (&image_format, 0, sizeof(struct v4l2_format));
 	memset (&b_req, 0, sizeof(struct v4l2_requestbuffers));
@@ -259,7 +259,7 @@ int device_close (V4l2Device *dev)
 		free (dev->image.data);
 	if (dev->buffer)
 	{
-		int i;
+		unsigned int i;
 		for (i = 0; i < dev->n_buffers; ++i)
 			if (dev->buffer[i].start)
 				munmap (dev->buffer[i].start,

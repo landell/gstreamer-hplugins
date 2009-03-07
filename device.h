@@ -60,7 +60,7 @@ typedef struct {
 	unsigned int width;
 	unsigned int height;
 	DeviceBuffer *buffer;
-	int n_buffers;
+	unsigned int n_buffers;
 	int fps;
 	struct v4l2_capability device_capability;
 	u_int32_t pixelformat;
