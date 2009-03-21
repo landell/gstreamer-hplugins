@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 #include <jpeglib.h>
-#include "device.h"
+#include "hcvimage.h"
 
 void hcv_jpeg_membuffer_src (j_decompress_ptr, ImageBuffer *);
 

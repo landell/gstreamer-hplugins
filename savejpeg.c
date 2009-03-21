@@ -18,7 +18,7 @@
  */
 
 #include <stdlib.h>
-#include "device.h"
+#include "hcvimage.h"
 #include <stdio.h>
 #include <jpeglib.h>
 #include "hcvloop.h"

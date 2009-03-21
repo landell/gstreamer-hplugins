@@ -19,7 +19,7 @@
 
 #include <stdio.h>
 #include <jpeglib.h>
-#include "device.h"
+#include "hcvimage.h"
 
 static struct jpeg_source_mgr hcv_jpeg_source_mgr;
 

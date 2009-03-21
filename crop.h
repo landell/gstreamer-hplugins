@@ -20,7 +20,7 @@
 #ifndef HCV_CROP_H
 #define HCV_CROP_H
 
-#include "device.h"
+#include "hcvimage.h"
 
 typedef struct {
 	int left;

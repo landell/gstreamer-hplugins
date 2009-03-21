@@ -26,6 +26,7 @@
 
 #include <sys/types.h>
 #include <linux/videodev2.h>
+#include "hcvimage.h"
 
 typedef enum {
 	DEVICE_OK = 0,
@@ -42,12 +43,6 @@ typedef enum {
 	DEVICE_NOT_READY,
 	DEVICE_EMPTY_FRAME
 } DeviceErrors;
-
-typedef struct {
-  unsigned char * data;
-  size_t len;
-  struct v4l2_pix_format fmt;
-} ImageBuffer;
 
 typedef struct {
 	void *start;

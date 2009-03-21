@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2008  Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+ *  Copyright (C) 2009  Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,41 +16,16 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef HCV_IMAGE_H
+#define HCV_IMAGE_H
 
+#include <sys/types.h>
+#include <linux/videodev2.h>
 
-#include "hcvimage.h"
-#include "hcvloop.h"
-#include <stdlib.h>
+typedef struct {
+  unsigned char * data;
+  size_t len;
+  struct v4l2_pix_format fmt;
+} ImageBuffer;
 
-int save_image (ImageBuffer *image, char *name, FieldOptions *opt)
-{
-	int r;
-	FILE *file;
-	ImageBuffer *grayimage = NULL;
-	file = fopen (name, "wb");
-
-	if (file == NULL)
-	{
-		return 1;
-	}
-
-	if (opt->flags & FO_GRAY)
-	{
-		grayimage = image_convert_grayscale (image);
-	}
-
-	if (grayimage != NULL)
-	{
-		jpeg_save_image (grayimage, file, 1);
-		free (grayimage->data);
-		free (grayimage);
-	}
-	else
-	{
-		r = jpeg_save_image (image, file, 0);
-	}
-
-	fclose (file);
-
-	return r;
-}
+#endif

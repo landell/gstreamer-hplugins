@@ -20,7 +20,7 @@
 
 
 #include <stdlib.h>
-#include "device.h"
+#include "hcvimage.h"
 #include "hcvmemsrc.h"
 #include <stdio.h>
 #include <jpeglib.h>
