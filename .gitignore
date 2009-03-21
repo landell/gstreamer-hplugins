@@ -1,4 +1,5 @@
 *.o
+*.so
 v4l2capture
 v4l2capture-client
 jheader

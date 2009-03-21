@@ -12,7 +12,13 @@ DATA_DIR := $(DESTDIR)/var/lib/hcv
 HEADER_FILE = $(DATA_DIR)/header.jpg
 FAKEROOT = fakeroot
 
-all: v4l2capture v4l2capture-client jheader
+all: v4l2capture v4l2capture-client jheader libgsthcv.so
+
+gstreamer.o: gstreamer.c
+	$(CC) -c -o $@ $< `pkg-config --cflags gstreamer-0.10`
+
+libgsthcv.so: gstreamer.o facetracker.o
+	$(CC) -o $@ -shared gstreamer.o facetracker.o `pkg-config --libs gstreamer-0.10 gstreamer-base-0.10`
 
 jheader.o: jheader.c
 	$(GCC) -c -o $@ $<
@@ -38,4 +44,4 @@ install: all
 
 clean:
 	rm -f v4l2capture $(OBJECTS) v4l2capture-client client.o \
-		jheader jheader.o
+		jheader jheader.o gstreamer.o libgsthcv.so
