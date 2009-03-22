@@ -26,9 +26,6 @@ ImageBuffer *
 image_mark (ImageBuffer *src, crop_window_t *win)
 {
 	ImageBuffer *dst;
-	int i;
-	unsigned char *d1;
-	unsigned char *d2;
 	/* FIXME: assuming bytes per pixel is 3 */
 	int bpp = 3;
 	dst = malloc (sizeof (ImageBuffer));
@@ -46,6 +43,18 @@ image_mark (ImageBuffer *src, crop_window_t *win)
 		return NULL;
 	}
 	memcpy (dst->data, src->data, dst->len);
+	image_mark_self (dst, win);
+	return dst;
+}
+
+void
+image_mark_self (ImageBuffer *dst, crop_window_t *win)
+{
+	int i;
+	unsigned char *d1;
+	unsigned char *d2;
+	/* FIXME: assuming bytes per pixel is 3 */
+	int bpp = 3;
 	d1 = dst->data + win->top * dst->fmt.bytesperline + win->left * bpp;
 	d2 = dst->data + win->bottom * dst->fmt.bytesperline + win->left * bpp;
 	for (i = win->left; i < win->right; i++)
@@ -66,7 +75,6 @@ image_mark (ImageBuffer *src, crop_window_t *win)
 		d1 += dst->fmt.bytesperline;
 		d2 += dst->fmt.bytesperline;
 	}
-	return dst;
 }
 
 ImageBuffer *
