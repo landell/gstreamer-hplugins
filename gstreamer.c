@@ -45,7 +45,7 @@ gst_hcv_buffer_facetracker (GstBuffer *gbuf)
 {
   crop_window_t *window;
   ImageBuffer buf;
-  GstBuffer *nbuf = gst_buffer_make_writable (gst_buffer_ref (gbuf));
+  GstBuffer *nbuf = gst_buffer_ref (gbuf);
   GstCaps *caps = GST_BUFFER_CAPS (nbuf);
   GstStructure *str = gst_caps_get_structure (caps, 0);
   guint32 fmt;
@@ -54,22 +54,22 @@ gst_hcv_buffer_facetracker (GstBuffer *gbuf)
   gst_structure_get_fourcc (str, "format", &fmt);
   gst_structure_get_int (str, "width", &width);
   gst_structure_get_int (str, "height", &height);
-  if (fmt == GST_MAKE_FOURCC ('I', '4', '2', '0') ||
-      fmt == GST_MAKE_FOURCC ('I', 'Y', 'U', 'V'))
-    {
-      buf.fmt.pixelformat = V4L2_PIX_FMT_YUV420;
-    }
-  else
+  if (fmt != GST_MAKE_FOURCC ('Y', 'C', 'b', 'r'))
     {
       return FALSE;
     }
+  buf.fmt.pixelformat = V4L2_PIX_FMT_YUV420;
   buf.fmt.width = width;
   buf.fmt.height = height;
   buf.fmt.bytesperline = width * 3;
   buf.len = GST_BUFFER_SIZE (nbuf);
   buf.data = GST_BUFFER_DATA (nbuf);
   window = image_facetracker (&buf);
-  free (window);
+  if (window != NULL)
+    {
+      image_mark_self (&buf, window);
+      free (window);
+    }
   gst_buffer_unref (nbuf);
   return TRUE;
 }
@@ -89,10 +89,10 @@ GST_ELEMENT_DETAILS ("HCV Facetracker", "Filter/Face", "Detects a face",
 
 static GstStaticPadTemplate srctemplate = 
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-                         GST_STATIC_CAPS ("video/x-raw-yuv,format=(fourcc)I420"));
+                         GST_STATIC_CAPS ("video/x-raw-yuv,format=(fourcc)YCbr"));
 static GstStaticPadTemplate sinktemplate =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-                         GST_STATIC_CAPS ("video/x-raw-yuv,format=(fourcc)I420"));
+                         GST_STATIC_CAPS ("video/x-raw-yuv,format=(fourcc)YCbr"));
 
 static void
 gst_hcv_facetracker_base_init (GstBaseTransformClass *klass)
@@ -137,12 +137,19 @@ gst_hcv_facetracker_get_type (void)
 
 #define HCV_TYPE_FACETRACKER (gst_hcv_facetracker_get_type ())
 
+extern GType gst_hcv_ycbcr_enc_get_type (void);
+#define HCV_TYPE_YCBCR_ENC (gst_hcv_ycbcr_enc_get_type ())
+extern GType gst_hcv_ycbcr_dec_get_type (void);
+#define HCV_TYPE_YCBCR_DEC (gst_hcv_ycbcr_dec_get_type ())
+
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
   gboolean res;
   res = gst_element_register (plugin, "facetracker", GST_RANK_NONE,
                               HCV_TYPE_FACETRACKER);
+  res = res && gst_element_register (plugin, "ycbcrenc", GST_RANK_NONE, HCV_TYPE_YCBCR_ENC);
+  res = res && gst_element_register (plugin, "ycbcrdec", GST_RANK_NONE, HCV_TYPE_YCBCR_DEC);
   return res;
 }
 
