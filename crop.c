@@ -55,6 +55,7 @@ image_mark_self (ImageBuffer *dst, crop_window_t *win)
 	unsigned char *d2;
 	/* FIXME: assuming bytes per pixel is 3 */
 	int bpp = 3;
+	/*
 	d1 = dst->data + win->top * dst->fmt.bytesperline + win->left * bpp;
 	d2 = dst->data + win->bottom * dst->fmt.bytesperline + win->left * bpp;
 	for (i = win->left; i < win->right; i++)
@@ -65,13 +66,17 @@ image_mark_self (ImageBuffer *dst, crop_window_t *win)
 		d1 += 3;
 		d2 += 3;
 	}
+	*/
 	d1 = dst->data + win->top * dst->fmt.bytesperline + win->left * bpp;
 	d2 = dst->data + win->top * dst->fmt.bytesperline + win->right * bpp;
 	for (i = win->top; i < win->bottom; i++)
 	{
+		memset (d1, 0, d2 - d1);
+		/*
 		d1[0] = d2[0] = 0x00;
 		d1[1] = d2[1] = 0x00;
 		d1[2] = d2[2] = 0x00;
+		*/
 		d1 += dst->fmt.bytesperline;
 		d2 += dst->fmt.bytesperline;
 	}
