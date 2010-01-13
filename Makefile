@@ -2,7 +2,7 @@ GCC = gcc
 CROSS_COMPILE ?=
 CFLAGS ?= -g -Wall -Wextra
 LIBS = -ljpeg
-CC := $(CROSS_COMPILE)$(GCC) $(CFLAGS)
+CC := $(CROSS_COMPILE)$(GCC) $(CFLAGS) -fPIC
 OBJECTS = v4l2capture.o device.o negotiation.o hcverror.o hcvloop.o \
 	hcvconv.o crop.o save.o savejpeg.o hcvmemsrc.o facetracker.o
 GST_OBJECTS = gstreamer.o facetracker.o crop.o ycbcr.o
@@ -48,4 +48,4 @@ install: all
 
 clean:
 	rm -f v4l2capture $(OBJECTS) v4l2capture-client client.o \
-		jheader jheader.o gstreamer.o libgsthcv.so
+		jheader jheader.o gstreamer.o libgsthcv.so ycbcr.o
