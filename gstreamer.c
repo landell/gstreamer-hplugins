@@ -141,6 +141,8 @@ extern GType gst_hcv_ycbcr_enc_get_type (void);
 #define HCV_TYPE_YCBCR_ENC (gst_hcv_ycbcr_enc_get_type ())
 extern GType gst_hcv_ycbcr_dec_get_type (void);
 #define HCV_TYPE_YCBCR_DEC (gst_hcv_ycbcr_dec_get_type ())
+extern GType gst_hcv_kitten_get_type (void);
+#define HCV_TYPE_KITTEN (gst_hcv_kitten_get_type ())
 
 static gboolean
 plugin_init (GstPlugin *plugin)
@@ -150,6 +152,7 @@ plugin_init (GstPlugin *plugin)
                               HCV_TYPE_FACETRACKER);
   res = res && gst_element_register (plugin, "ycbcrenc", GST_RANK_NONE, HCV_TYPE_YCBCR_ENC);
   res = res && gst_element_register (plugin, "ycbcrdec", GST_RANK_NONE, HCV_TYPE_YCBCR_DEC);
+  res = res && gst_element_register (plugin, "kitten", GST_RANK_NONE, HCV_TYPE_KITTEN);
   return res;
 }
 

@@ -5,7 +5,7 @@ LIBS = -ljpeg
 CC := $(CROSS_COMPILE)$(GCC) $(CFLAGS) -fPIC
 OBJECTS = v4l2capture.o device.o negotiation.o hcverror.o hcvloop.o \
 	hcvconv.o crop.o save.o savejpeg.o hcvmemsrc.o facetracker.o
-GST_OBJECTS = gstreamer.o facetracker.o crop.o ycbcr.o
+GST_OBJECTS = gstreamer.o facetracker.o crop.o ycbcr.o kitten.o
 DESTDIR ?=
 INSTALL_DIR := $(DESTDIR)/usr/bin/
 RUNTIME_DIR := $(DESTDIR)/var/run/hcv
@@ -19,6 +19,9 @@ gstreamer.o: gstreamer.c
 	$(CC) -c -o $@ $< `pkg-config --cflags gstreamer-0.10`
 
 ycbcr.o: ycbcr.c
+	$(CC) -c -o $@ $< `pkg-config --cflags gstreamer-0.10`
+
+kitten.o: kitten.c
 	$(CC) -c -o $@ $< `pkg-config --cflags gstreamer-0.10`
 
 libgsthcv.so: $(GST_OBJECTS)
@@ -48,4 +51,4 @@ install: all
 
 clean:
 	rm -f v4l2capture $(OBJECTS) v4l2capture-client client.o \
-		jheader jheader.o gstreamer.o libgsthcv.so ycbcr.o
+		jheader jheader.o gstreamer.o libgsthcv.so ycbcr.o kitten.o
