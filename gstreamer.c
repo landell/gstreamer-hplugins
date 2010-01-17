@@ -41,7 +41,7 @@ hcv_image_buffer_to_gst_buffer (ImageBuffer *hbuf, GstBuffer *gbuf)
 */
 
 static gboolean
-gst_hcv_buffer_facetracker (GstBuffer *gbuf)
+gst_hcv_buffer_facetracker (GstBaseTransform *trans, GstBuffer *gbuf)
 {
   crop_window_t *window;
   ImageBuffer buf;
@@ -51,6 +51,10 @@ gst_hcv_buffer_facetracker (GstBuffer *gbuf)
   guint32 fmt;
   gint width;
   gint height;
+	GstBus *bus;
+	GstMessage *message;
+	GstStructure *window_structure = gst_structure_empty_new ("crop_window_t");
+
   gst_structure_get_fourcc (str, "format", &fmt);
   gst_structure_get_int (str, "width", &width);
   gst_structure_get_int (str, "height", &height);
@@ -67,7 +71,14 @@ gst_hcv_buffer_facetracker (GstBuffer *gbuf)
   window = image_facetracker (&buf);
   if (window != NULL)
     {
-      image_mark_self (&buf, window);
+			bus = gst_element_get_bus (GST_ELEMENT (trans));
+			gst_structure_set (window_structure, "left", G_TYPE_INT, window->left, NULL);
+			gst_structure_set (window_structure, "right", G_TYPE_INT, window->right, NULL);
+			gst_structure_set (window_structure, "top", G_TYPE_INT, window->top, NULL);
+			gst_structure_set (window_structure, "bottom", G_TYPE_INT, window->bottom, NULL);
+			message = gst_message_new_element (GST_OBJECT (trans), window_structure);
+			gst_bus_post(bus, message);
+			/*send_window_bus(window);*/
       free (window);
     }
   gst_buffer_unref (nbuf);
@@ -79,7 +90,7 @@ static GstFlowReturn
 gst_hcv_facetracker_transform_ip (GstBaseTransform *trans, GstBuffer *buf)
 {
   gboolean res;
-  res = gst_hcv_buffer_facetracker (buf);
+  res = gst_hcv_buffer_facetracker (trans, buf);
   return GST_FLOW_OK;
 }
 
@@ -112,6 +123,12 @@ gst_hcv_facetracker_class_init (GstBaseTransformClass *klass)
   gst_element_class_set_details (GST_ELEMENT_CLASS (klass), &details);
 }
 
+static void
+gst_hcv_facetracker_init (GstBaseTransform *trans, GstBaseTransformClass *klass)
+{
+	gst_base_transform_set_passthrough (trans,TRUE);
+}
+
 static GType
 gst_hcv_facetracker_get_type (void)
 {
@@ -127,7 +144,7 @@ gst_hcv_facetracker_get_type (void)
         NULL,
         sizeof (GstBaseTransform),
         0,
-        NULL
+        (GInstanceInitFunc)gst_hcv_facetracker_init,
       };
       type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
                                      "GstHcvFacetrackerType", &info, 0);

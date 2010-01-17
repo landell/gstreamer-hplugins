@@ -25,9 +25,28 @@
 #include <string.h>
 
 static gboolean 
-gst_hcv_buffer_kitten (GstBuffer *buf)
+gst_hcv_buffer_kitten (GstBuffer *gbuf)
 {
-	return 0;
+  /*crop_window_t *window = NULL;
+  ImageBuffer buf;*/
+  GstBuffer *nbuf = gst_buffer_ref (gbuf);
+  GstCaps *caps = GST_BUFFER_CAPS (nbuf);
+  GstStructure *str = gst_caps_get_structure (caps, 0);
+  gint width;
+  gint height;
+	unsigned char *data;
+	unsigned char *buf = malloc(sizeof(unsigned char) * 10);
+  gst_structure_get_int (str, "width", &width);
+  gst_structure_get_int (str, "height", &height);
+	data = GST_BUFFER_DATA(nbuf);
+	memset (GST_BUFFER_DATA(nbuf)+80000, 0, 80000);
+  /*if (window != NULL)
+    {
+			send_window_bus(window);
+      free (window);
+    }*/
+  gst_buffer_unref (nbuf);
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -44,10 +63,11 @@ GST_ELEMENT_DETAILS ("HCV Kitten Secrecy", "Filter/Kitten", "Put image in detect
 
 static GstStaticPadTemplate srctemplate = 
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-                         GST_STATIC_CAPS ("video/x-raw-yuv,format=(fourcc)YUY2"));
+		GST_STATIC_CAPS ("video/x-raw-rgb"));
+
 static GstStaticPadTemplate sinktemplate =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-                         GST_STATIC_CAPS ("video/x-raw-yuv,format=(fourcc)YUY2"));
+                         GST_STATIC_CAPS ("video/x-raw-rgb"));
 
 static void
 gst_hcv_kitten_base_init (GstBaseTransformClass *klass)
@@ -90,7 +110,7 @@ gst_hcv_kitten_get_type (void)
   return type;
 }
 
-#define HCV_TYPE_YCBCR_ENC (gst_hcv_ycbcr_enc_get_type ())
+#define HCV_TYPE_KITTEN (gst_hcv_kitten_get_type ())
 
 /*
 static gboolean
