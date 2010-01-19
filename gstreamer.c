@@ -59,9 +59,9 @@ gst_hcv_buffer_facetracker (GstBaseTransform *trans, GstBuffer *gbuf)
   gst_structure_get_int (str, "width", &width);
   gst_structure_get_int (str, "height", &height);
   if (fmt != GST_MAKE_FOURCC ('Y', 'C', 'b', 'r'))
-    {
+	{
       return FALSE;
-    }
+	}
   buf.fmt.pixelformat = V4L2_PIX_FMT_YUV420;
   buf.fmt.width = width;
   buf.fmt.height = height;
@@ -70,7 +70,7 @@ gst_hcv_buffer_facetracker (GstBaseTransform *trans, GstBuffer *gbuf)
   buf.data = GST_BUFFER_DATA (nbuf);
   window = image_facetracker (&buf);
   if (window != NULL)
-    {
+	{
 			bus = gst_element_get_bus (GST_ELEMENT (trans));
 			gst_structure_set (window_structure, "left", G_TYPE_INT, window->left, NULL);
 			gst_structure_set (window_structure, "right", G_TYPE_INT, window->right, NULL);
@@ -80,7 +80,7 @@ gst_hcv_buffer_facetracker (GstBaseTransform *trans, GstBuffer *gbuf)
 			gst_bus_post(bus, message);
 			/*send_window_bus(window);*/
       free (window);
-    }
+	}
   gst_buffer_unref (nbuf);
   return TRUE;
 }
