@@ -22,10 +22,10 @@ ycbcr.o: ycbcr.c
 	$(CC) -c -o $@ $< `pkg-config --cflags gstreamer-0.10`
 
 kitten.o: kitten.c
-	$(CC) -c -o $@ $< `pkg-config --cflags gstreamer-0.10`
+	$(CC) -c -o $@ $< `pkg-config --cflags gstreamer-0.10 gstreamer-plugins-base-0.10 cairo`
 
 libgsthcv.so: $(GST_OBJECTS)
-	$(CC) -o $@ -shared $(GST_OBJECTS) `pkg-config --libs gstreamer-0.10 gstreamer-base-0.10`
+	$(CC) -o $@ -shared $(GST_OBJECTS) `pkg-config --libs gstreamer-0.10 gstreamer-base-0.10 gstreamer-plugins-base-0.10 cairo` -lgstvideo-0.10
 
 jheader.o: jheader.c
 	$(GCC) -c -o $@ $<

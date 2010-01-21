@@ -20,8 +20,10 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include <gst/video/video.h>
 #include "crop.h"
 
+#include <cairo.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -61,38 +63,82 @@ struct _GstHcvKitten
 static gboolean 
 gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 {
-  GstBuffer *nbuf = gst_buffer_ref (gbuf);
-  GstCaps *caps = GST_BUFFER_CAPS (nbuf);
-  GstStructure *str = gst_caps_get_structure (caps, 0);
-	unsigned char *d1;
-	unsigned char *d2;
-	int bytes_per_line;
-  gint width;
-  gint height;
-	gint bpp = 0;
-	unsigned char *data;
-	int i;
+	GstBuffer *nbuf = gst_buffer_ref (gbuf);
+	GstCaps *caps;
+	cairo_t* cr;
+	cairo_surface_t* surface;
+	cairo_surface_t* source;
+	static gint width;
+	static gint height;
+	static cairo_format_t cairo_format;
+	static int stride = -1;
+	GstVideoFormat format;
+	float w;
+	float h;
+	float desired_width;
+	float desired_height;
+	float scale;
 
-  gst_structure_get_int (str, "width", &width);
-  gst_structure_get_int (str, "height", &height);
-	if (!gst_structure_get_int (str, "bpp", &bpp))
-		bpp = 3;
-	else
-		bpp /= 8;
-	bytes_per_line = bpp * width;
-	data = GST_BUFFER_DATA(nbuf);
-	//memset (GST_BUFFER_DATA(nbuf)+80000, 0, 80000);
-	d1 = data + self->priv->top * bytes_per_line + self->priv->left * bpp;
-	d2 = data + self->priv->top * bytes_per_line + self->priv->right * bpp;
-	for (i=self->priv->top; i<self->priv->bottom; i++)
+
+	if (stride == -1)
 	{
-		memset (d1, 0, d2-d1);
-		d1 += bytes_per_line;
-		d2 += bytes_per_line;
+		caps = gst_buffer_get_caps(nbuf);
+		if (!gst_video_format_parse_caps (caps, &format, &width, &height)) {
+			gst_caps_unref(caps);
+			g_warning ("Could not parse caps");
+			return FALSE;
+		}
 
+		if (format == GST_VIDEO_FORMAT_ARGB || format == GST_VIDEO_FORMAT_BGRA)
+		{
+			cairo_format = CAIRO_FORMAT_ARGB32;
+			g_print ("Formato é ARGB32\n");
+		}
+		else
+		{
+			cairo_format = CAIRO_FORMAT_RGB24;
+			g_print ("Fomato é RGB24\n");
+		}
+		stride = cairo_format_stride_for_width(cairo_format, width);
+		gst_caps_unref(caps);
 	}
-  gst_buffer_unref (nbuf);
-  return TRUE;
+
+	source = cairo_image_surface_create_from_png ("img/kitten-0.6.png");
+	w = cairo_image_surface_get_width (source);
+	desired_width = self->priv->right - self->priv->left;
+	scale = (desired_width + 1) / w;
+
+	surface = cairo_image_surface_create (cairo_format, width, height);
+	cr = cairo_create (surface);
+	cairo_save (cr);
+	cairo_scale (cr, scale, scale);
+	g_print("%s\n",cairo_status_to_string(cairo_status(cr)));
+	cairo_set_source_surface (cr, source, 0, 0);
+	g_print("%s\n",cairo_status_to_string(cairo_status(cr)));
+	cairo_pattern_set_extend(cairo_get_source(cr), CAIRO_EXTEND_PAD);
+	cairo_paint(cr);
+	cairo_restore (cr);
+	cairo_destroy(cr);
+	cairo_surface_destroy(source);
+	source = surface;
+
+
+	surface = cairo_image_surface_create_for_data (GST_BUFFER_DATA(nbuf),
+			cairo_format,
+			width,
+			height,
+			stride);
+	cr = cairo_create (surface);
+
+	cairo_set_source_surface (cr, source, self->priv->left, self->priv->top);
+	cairo_pattern_set_extend(cairo_get_source(cr), CAIRO_EXTEND_PAD);
+	cairo_paint(cr);
+
+	/* Paint */
+	cairo_surface_destroy(surface);
+	cairo_destroy(cr);
+	gst_buffer_unref (nbuf);
+	return TRUE;
 }
 
 static GstFlowReturn
@@ -109,11 +155,11 @@ GST_ELEMENT_DETAILS ("HCV Kitten Secrecy", "Filter/Kitten", "Put image in detect
 
 static GstStaticPadTemplate srctemplate = 
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-		GST_STATIC_CAPS ("video/x-raw-rgb"));
+		GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA));
 
 static GstStaticPadTemplate sinktemplate =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-                         GST_STATIC_CAPS ("video/x-raw-rgb"));
+                         GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA));
 
 static void 
 gst_hcv_kitten_set_property (GObject      *object,
