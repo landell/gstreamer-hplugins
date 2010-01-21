@@ -82,9 +82,9 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 
 	if (stride == -1)
 	{
-		caps = gst_buffer_get_caps(nbuf);
+		caps = gst_buffer_get_caps (nbuf);
 		if (!gst_video_format_parse_caps (caps, &format, &width, &height)) {
-			gst_caps_unref(caps);
+			gst_caps_unref (caps);
 			g_warning ("Could not parse caps");
 			return FALSE;
 		}
@@ -99,8 +99,8 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 			cairo_format = CAIRO_FORMAT_RGB24;
 			g_print ("Fomato é RGB24\n");
 		}
-		stride = cairo_format_stride_for_width(cairo_format, width);
-		gst_caps_unref(caps);
+		stride = cairo_format_stride_for_width (cairo_format, width);
+		gst_caps_unref (caps);
 	}
 
 	source = cairo_image_surface_create_from_png ("img/kitten-0.6.png");
@@ -115,7 +115,6 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 	g_print("%s\n",cairo_status_to_string(cairo_status(cr)));
 	cairo_set_source_surface (cr, source, 0, 0);
 	g_print("%s\n",cairo_status_to_string(cairo_status(cr)));
-	//cairo_pattern_set_extend(cairo_get_source(cr), CAIRO_EXTEND_PAD);
 	cairo_paint(cr);
 	cairo_restore (cr);
 	cairo_destroy(cr);
@@ -123,7 +122,7 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 	source = surface;
 
 
-	surface = cairo_image_surface_create_for_data (GST_BUFFER_DATA(nbuf),
+	surface = cairo_image_surface_create_for_data (GST_BUFFER_DATA (nbuf),
 			cairo_format,
 			width,
 			height,
@@ -137,11 +136,10 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 		y = 0;
 
 	cairo_set_source_surface (cr, source, x, y);
-	//cairo_pattern_set_extend(cairo_get_source(cr), CAIRO_EXTEND_PAD);
-	cairo_paint(cr);
+	cairo_paint (cr);
 
-	cairo_surface_destroy(surface);
-	cairo_destroy(cr);
+	cairo_surface_destroy (surface);
+	cairo_destroy (cr);
 	gst_buffer_unref (nbuf);
 	return TRUE;
 }
@@ -306,9 +304,9 @@ gst_hcv_kitten_class_init (GstBaseTransformClass *klass)
 }
 
 static void
-gst_hcv_kitten_init(GstHcvKitten *trans, GstBaseTransformClass *klass G_GNUC_UNUSED)
+gst_hcv_kitten_init (GstHcvKitten *trans, GstBaseTransformClass *klass G_GNUC_UNUSED)
 {
-	trans->priv = (GstHcvKittenPriv *) malloc(sizeof(GstHcvKittenPriv));
+	trans->priv = (GstHcvKittenPriv *) malloc (sizeof (GstHcvKittenPriv));
 	trans->priv->left = 0;
 	trans->priv->right = 0;
 	trans->priv->top = 0;
