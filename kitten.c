@@ -74,10 +74,10 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 	static int stride = -1;
 	GstVideoFormat format;
 	float w;
-	float h;
 	float desired_width;
-	float desired_height;
 	float scale;
+	int x;
+	int y;
 
 
 	if (stride == -1)
@@ -105,7 +105,7 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 
 	source = cairo_image_surface_create_from_png ("img/kitten-0.6.png");
 	w = cairo_image_surface_get_width (source);
-	desired_width = self->priv->right - self->priv->left;
+	desired_width = (self->priv->right - self->priv->left)* 2.0;
 	scale = (desired_width + 1) / w;
 
 	surface = cairo_image_surface_create (cairo_format, width, height);
@@ -115,7 +115,7 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 	g_print("%s\n",cairo_status_to_string(cairo_status(cr)));
 	cairo_set_source_surface (cr, source, 0, 0);
 	g_print("%s\n",cairo_status_to_string(cairo_status(cr)));
-	cairo_pattern_set_extend(cairo_get_source(cr), CAIRO_EXTEND_PAD);
+	//cairo_pattern_set_extend(cairo_get_source(cr), CAIRO_EXTEND_PAD);
 	cairo_paint(cr);
 	cairo_restore (cr);
 	cairo_destroy(cr);
@@ -129,12 +129,17 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 			height,
 			stride);
 	cr = cairo_create (surface);
+	x = self->priv->left - desired_width*0.25;
+	if (x < 0)
+		x = 0;
+	y = self->priv->top - desired_width*0.20;
+	if (y < 0)
+		y = 0;
 
-	cairo_set_source_surface (cr, source, self->priv->left, self->priv->top);
-	cairo_pattern_set_extend(cairo_get_source(cr), CAIRO_EXTEND_PAD);
+	cairo_set_source_surface (cr, source, x, y);
+	//cairo_pattern_set_extend(cairo_get_source(cr), CAIRO_EXTEND_PAD);
 	cairo_paint(cr);
 
-	/* Paint */
 	cairo_surface_destroy(surface);
 	cairo_destroy(cr);
 	gst_buffer_unref (nbuf);
