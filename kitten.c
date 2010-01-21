@@ -258,6 +258,10 @@ static void
 gst_hcv_kitten_init(GstHcvKitten *trans, GstBaseTransformClass *klass G_GNUC_UNUSED)
 {
 	trans->priv = (GstHcvKittenPriv *) malloc(sizeof(GstHcvKittenPriv));
+	trans->priv->left = 0;
+	trans->priv->right = 0;
+	trans->priv->top = 0;
+	trans->priv->bottom = 0;
 }
 
 GType
