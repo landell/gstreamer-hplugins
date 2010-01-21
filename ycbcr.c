@@ -24,10 +24,10 @@
 #include <string.h>
 
 static GstFlowReturn
-gst_hcv_ycbcr_enc_transform (GstBaseTransform *trans, GstBuffer *inbuf,
+gst_hcv_ycbcr_enc_transform (GstBaseTransform *trans G_GNUC_UNUSED, GstBuffer *inbuf,
                              GstBuffer *outbuf)
 {
-  int i;
+  unsigned int i;
   guchar * in = GST_BUFFER_DATA (inbuf);
   guchar * out = GST_BUFFER_DATA (outbuf);
   for (i = 0; i < GST_BUFFER_SIZE (inbuf) >> 1; i+=2)
@@ -43,10 +43,10 @@ gst_hcv_ycbcr_enc_transform (GstBaseTransform *trans, GstBuffer *inbuf,
 }
 
 static GstFlowReturn
-gst_hcv_ycbcr_dec_transform (GstBaseTransform *trans, GstBuffer *inbuf,
+gst_hcv_ycbcr_dec_transform (GstBaseTransform *trans G_GNUC_UNUSED, GstBuffer *inbuf,
                              GstBuffer *outbuf)
 {
-  int i;
+  unsigned int i;
   guchar * in = GST_BUFFER_DATA (inbuf);
   guchar * out = GST_BUFFER_DATA (outbuf);
   for (i = 0; i < GST_BUFFER_SIZE (outbuf) >> 1; i+=2)
@@ -62,7 +62,7 @@ gst_hcv_ycbcr_dec_transform (GstBaseTransform *trans, GstBuffer *inbuf,
 }
 
 static gboolean
-gst_hcv_ycbcr_get_unit_size (GstBaseTransform *trans, GstCaps *caps,
+gst_hcv_ycbcr_get_unit_size (GstBaseTransform *trans G_GNUC_UNUSED, GstCaps *caps,
                                  guint *size)
 {
   GstStructure *str = gst_caps_get_structure (caps, 0);
@@ -86,7 +86,7 @@ gst_hcv_ycbcr_get_unit_size (GstBaseTransform *trans, GstCaps *caps,
 }
 
 GstCaps *
-gst_hcv_ycbcr_enc_transform_caps (GstBaseTransform *trans, GstPadDirection dir,
+gst_hcv_ycbcr_enc_transform_caps (GstBaseTransform *trans G_GNUC_UNUSED, GstPadDirection dir,
                                   GstCaps *caps)
 {
   GstCaps *outcaps = gst_caps_copy (caps);
@@ -99,7 +99,7 @@ gst_hcv_ycbcr_enc_transform_caps (GstBaseTransform *trans, GstPadDirection dir,
 }
 
 GstCaps *
-gst_hcv_ycbcr_dec_transform_caps (GstBaseTransform *trans, GstPadDirection dir,
+gst_hcv_ycbcr_dec_transform_caps (GstBaseTransform *trans G_GNUC_UNUSED, GstPadDirection dir,
                                   GstCaps *caps)
 {
   GstCaps *outcaps = gst_caps_copy (caps);
@@ -190,7 +190,8 @@ gst_hcv_ycbcr_enc_get_type (void)
         NULL,
         sizeof (GstBaseTransform),
         0,
-        NULL
+        NULL,
+				NULL
       };
       type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
                                      "GstHCVYCbCrEncType", &info, 0);
@@ -213,7 +214,8 @@ gst_hcv_ycbcr_dec_get_type (void)
         NULL,
         sizeof (GstBaseTransform),
         0,
-        NULL
+        NULL,
+				NULL
       };
       type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
                                      "GstHCVYCbCrDecType", &info, 0);
