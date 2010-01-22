@@ -51,6 +51,10 @@ struct _GstHcvKittenPriv
 	int right;
 	int top;
 	int bottom;
+	cairo_surface_t *image;
+	cairo_t *scaled_context;
+	cairo_surface_t *surface;
+	float kitten_width;
 };
 
 struct _GstHcvKitten
@@ -67,14 +71,13 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 	GstCaps *caps;
 	cairo_t* cr;
 	cairo_surface_t* surface;
-	cairo_surface_t* source;
 	static gint width;
 	static gint height;
 	static cairo_format_t cairo_format;
 	static int stride = -1;
 	GstVideoFormat format;
-	float w;
-	float desired_width;
+	float desired_width = 0;
+	static float previous_width = 0;
 	float scale;
 	int x;
 	int y;
@@ -103,23 +106,38 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 		gst_caps_unref (caps);
 	}
 
-	source = cairo_image_surface_create_from_png ("img/kitten-0.6.png");
-	w = cairo_image_surface_get_width (source);
 	desired_width = (self->priv->right - self->priv->left)* 2.0;
-	scale = (desired_width + 1) / w;
+	if (desired_width > width)
+		desired_width = width;
+	if (abs(previous_width - desired_width) > 50 )
+	{
+		/*If there was a scaled context, destroy it to create a new one*/
+		if (self->priv->scaled_context != NULL)
+		{
+			cairo_destroy (self->priv->scaled_context);
+			if (self->priv->surface != NULL)
+				cairo_surface_destroy (self->priv->surface);
+		}
+		previous_width = desired_width;
+		self->priv->surface = cairo_image_surface_create (cairo_format, width, height);
+		self->priv->scaled_context = cairo_create (self->priv->surface);
 
-	surface = cairo_image_surface_create (cairo_format, width, height);
-	cr = cairo_create (surface);
-	cairo_save (cr);
-	cairo_scale (cr, scale, scale);
-	g_print("%s\n",cairo_status_to_string(cairo_status(cr)));
-	cairo_set_source_surface (cr, source, 0, 0);
-	g_print("%s\n",cairo_status_to_string(cairo_status(cr)));
-	cairo_paint(cr);
-	cairo_restore (cr);
-	cairo_destroy(cr);
-	cairo_surface_destroy(source);
-	source = surface;
+		scale = (desired_width + 1) / self->priv->kitten_width;
+		cairo_scale (self->priv->scaled_context, scale, scale);
+	}
+	else
+	{
+		if (self->priv->scaled_context == NULL)
+		{
+			self->priv->surface = cairo_image_surface_create (cairo_format, width, height);
+			self->priv->scaled_context = cairo_create (self->priv->surface);
+
+			scale = (desired_width + 1) / self->priv->kitten_width;
+			cairo_scale (self->priv->scaled_context, scale, scale);
+		}
+	}
+	cairo_set_source_surface (self->priv->scaled_context, self->priv->image, 0, 0);
+	cairo_paint (self->priv->scaled_context);
 
 
 	surface = cairo_image_surface_create_for_data (GST_BUFFER_DATA (nbuf),
@@ -135,10 +153,9 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 	if (y < 0)
 		y = 0;
 
-	cairo_set_source_surface (cr, source, x, y);
+	cairo_set_source_surface (cr, self->priv->surface, x, y);
 	cairo_paint (cr);
 
-	cairo_surface_destroy (surface);
 	cairo_destroy (cr);
 	gst_buffer_unref (nbuf);
 	return TRUE;
@@ -201,6 +218,27 @@ gst_hcv_kitten_set_property (GObject      *object,
 	 }
 }
 
+static void
+gst_hcv_kitten_dispose (GObject *object)
+{
+	GstHcvKitten *self = HCV_KITTEN(object);
+	if (self->priv->image != NULL)
+	{
+		cairo_surface_destroy (self->priv->image);
+		self->priv->image = NULL;
+	}
+	if (self->priv->scaled_context != NULL)
+	{
+		cairo_destroy (self->priv->scaled_context);
+		self->priv->scaled_context = NULL;
+	}
+	if (self->priv->surface != NULL)
+	{
+		cairo_surface_destroy (self->priv->surface);
+		self->priv->surface = NULL;
+	}
+}
+
 static void 
 gst_hcv_kitten_get_property (GObject      *object,
                              guint         property_id,
@@ -260,6 +298,7 @@ gst_hcv_kitten_class_init (GstBaseTransformClass *klass)
 
 	gobject_class->set_property = gst_hcv_kitten_set_property;
 	gobject_class->get_property = gst_hcv_kitten_get_property;
+	gobject_class->dispose = gst_hcv_kitten_dispose;
 
 	pspec = g_param_spec_int ("window_left",
 			"Left coordinate for window",
@@ -311,6 +350,10 @@ gst_hcv_kitten_init (GstHcvKitten *trans, GstBaseTransformClass *klass G_GNUC_UN
 	trans->priv->right = 0;
 	trans->priv->top = 0;
 	trans->priv->bottom = 0;
+	trans->priv->image = cairo_image_surface_create_from_png ("img/kitten-0.6.png");
+	trans->priv->kitten_width = cairo_image_surface_get_width (trans->priv->image);
+	trans->priv->scaled_context = NULL;
+	trans->priv->surface = NULL;
 }
 
 GType
