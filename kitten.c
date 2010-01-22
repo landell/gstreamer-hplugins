@@ -109,6 +109,7 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 	desired_width = (self->priv->right - self->priv->left)* 2.0;
 	if (desired_width > width)
 		desired_width = width;
+	g_print ("desired_width: %f\n", desired_width);
 	if (abs(previous_width - desired_width) > 50 )
 	{
 		/*If there was a scaled context, destroy it to create a new one*/
@@ -124,6 +125,8 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 
 		scale = (desired_width + 1) / self->priv->kitten_width;
 		cairo_scale (self->priv->scaled_context, scale, scale);
+		g_print ("%s\n",cairo_status_to_string (cairo_status (self->priv->scaled_context)));
+		g_print ("Width changed========================================\n");
 	}
 	else
 	{
@@ -134,9 +137,12 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 
 			scale = (desired_width + 1) / self->priv->kitten_width;
 			cairo_scale (self->priv->scaled_context, scale, scale);
+			g_print ("%s\n",cairo_status_to_string (cairo_status (self->priv->scaled_context)));
+			g_print ("First creation of scaled_context========================================\n");
 		}
 	}
 	cairo_set_source_surface (self->priv->scaled_context, self->priv->image, 0, 0);
+	g_print ("%s\n",cairo_status_to_string (cairo_status (self->priv->scaled_context)));
 	cairo_paint (self->priv->scaled_context);
 
 
@@ -152,6 +158,7 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 	y = self->priv->top - desired_width*0.20;
 	if (y < 0)
 		y = 0;
+	g_print ("X: %d, Y: %d   %d - %f\n", x, y, self->priv->left, desired_width*0.25);
 
 	cairo_set_source_surface (cr, self->priv->surface, x, y);
 	cairo_paint (cr);
