@@ -124,7 +124,7 @@ gst_hcv_facetracker_class_init (GstBaseTransformClass *klass)
 }
 
 static void
-gst_hcv_facetracker_init (GstBaseTransform *trans, GstBaseTransformClass *klass)
+gst_hcv_facetracker_init (GstBaseTransform *trans, GstBaseTransformClass *klass G_GNUC_UNUSED)
 {
 	gst_base_transform_set_passthrough (trans,TRUE);
 }
@@ -145,6 +145,7 @@ gst_hcv_facetracker_get_type (void)
         sizeof (GstBaseTransform),
         0,
         (GInstanceInitFunc)gst_hcv_facetracker_init,
+				NULL
       };
       type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
                                      "GstHcvFacetrackerType", &info, 0);

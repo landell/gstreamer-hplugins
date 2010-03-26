@@ -42,7 +42,10 @@ enum
 		GST_HCV_KITTEN_LEFT,
 		GST_HCV_KITTEN_RIGHT,
 		GST_HCV_KITTEN_BOTTOM,
-		GST_HCV_KITTEN_TOP
+		GST_HCV_KITTEN_TOP,
+		GST_HCV_KITTEN_IMAGE,
+		GST_HCV_KITTEN_PROPORTION,
+		GST_HCV_KITTEN_ALPHA
 };
 
 struct _GstHcvKittenPriv
@@ -51,6 +54,9 @@ struct _GstHcvKittenPriv
 	int right;
 	int top;
 	int bottom;
+	GString *img_path;
+	float proportion;
+	float alpha_value;
 	cairo_surface_t *image;
 	cairo_t *scaled_context;
 	cairo_surface_t *surface;
@@ -106,7 +112,7 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 		gst_caps_unref (caps);
 	}
 
-	desired_width = (self->priv->right - self->priv->left)* 2.0;
+	desired_width = (self->priv->right - self->priv->left)* self->priv->proportion;
 	if (desired_width > width)
 		desired_width = width;
 	g_print ("desired_width: %f\n", desired_width);
@@ -152,16 +158,16 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 			height,
 			stride);
 	cr = cairo_create (surface);
-	x = self->priv->left - desired_width*0.25;
+	x = self->priv->left - desired_width*(self->priv->proportion-1)/2/self->priv->proportion;
 	if (x < 0)
 		x = 0;
-	y = self->priv->top - desired_width*0.20;
+	y = self->priv->top - desired_width*(self->priv->proportion-1)/2.5/self->priv->proportion;
 	if (y < 0)
 		y = 0;
 	g_print ("X: %d, Y: %d   %d - %f\n", x, y, self->priv->left, desired_width*0.25);
 
 	cairo_set_source_surface (cr, self->priv->surface, x, y);
-	cairo_paint (cr);
+	cairo_paint_with_alpha (cr, self->priv->alpha_value);
 
 	cairo_destroy (cr);
 	gst_buffer_unref (nbuf);
@@ -216,6 +222,21 @@ gst_hcv_kitten_set_property (GObject      *object,
 		 case GST_HCV_KITTEN_BOTTOM:
 			 self->priv->bottom = g_value_get_int (value);
 			 g_print ("bottom: %d\n", self->priv->bottom);
+			 break;
+
+		 case GST_HCV_KITTEN_IMAGE:
+			 self->priv->img_path = g_string_new (g_value_get_string (value));
+			 g_print ("image: %s\n", self->priv->img_path->str);
+			 break;
+
+		 case GST_HCV_KITTEN_PROPORTION:
+			 self->priv->proportion = g_value_get_float (value);
+			 g_print ("proportion: %f\n", self->priv->proportion);
+			 break;
+
+		 case GST_HCV_KITTEN_ALPHA:
+			 self->priv->alpha_value = g_value_get_float (value);
+			 g_print ("alpha value: %f\n", self->priv->alpha_value);
 			 break;
 
 		 default:
@@ -276,6 +297,21 @@ gst_hcv_kitten_get_property (GObject      *object,
 			 g_print ("bottom: %d\n", self->priv->bottom);
 			 break;
 
+		 case GST_HCV_KITTEN_IMAGE:
+			 g_value_set_string (value, self->priv->img_path->str);
+			 g_print ("image: %s\n", self->priv->img_path->str);
+			 break;
+
+		 case GST_HCV_KITTEN_PROPORTION:
+			 g_value_set_float (value, self->priv->proportion);
+			 g_print ("proportion: %f\n", self->priv->proportion);
+			 break;
+
+		 case GST_HCV_KITTEN_ALPHA:
+			 g_value_set_float (value, self->priv->alpha_value);
+			 g_print ("alpha value: %f\n", self->priv->alpha_value);
+			 break;
+
 		 default:
 			 /* We don't have any other property... */
 			 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -295,6 +331,14 @@ gst_hcv_kitten_base_init (GstBaseTransformClass *klass)
 }
 
 static void
+gst_hcv_kitten_constructed (GObject *object)
+{
+	GstHcvKitten *self = HCV_KITTEN (object);
+	self->priv->image = cairo_image_surface_create_from_png (self->priv->img_path->str);
+	self->priv->kitten_width = cairo_image_surface_get_width (self->priv->image);
+}
+
+static void
 gst_hcv_kitten_class_init (GstBaseTransformClass *klass)
 {
 	GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
@@ -306,6 +350,7 @@ gst_hcv_kitten_class_init (GstBaseTransformClass *klass)
 	gobject_class->set_property = gst_hcv_kitten_set_property;
 	gobject_class->get_property = gst_hcv_kitten_get_property;
 	gobject_class->dispose = gst_hcv_kitten_dispose;
+	gobject_class->constructed = gst_hcv_kitten_constructed;
 
 	pspec = g_param_spec_int ("window_left",
 			"Left coordinate for window",
@@ -347,20 +392,48 @@ gst_hcv_kitten_class_init (GstBaseTransformClass *klass)
 	g_object_class_install_property (gobject_class,
 			GST_HCV_KITTEN_BOTTOM,
 			pspec);
+	pspec = g_param_spec_string ("kitten_image",
+			"Kitten png image to be used",
+			"Set png image filename",
+			"img/kitten-0.6.png",  /* default value */
+			G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+	g_object_class_install_property (gobject_class,
+			GST_HCV_KITTEN_IMAGE,
+			pspec);
+	pspec = g_param_spec_float ("kitten_proportion",
+			"Size of kitten in terms of window",
+			"Set proportion of kitten in terms of window",
+			0 /* minimum value */,
+			G_MAXFLOAT /* maximum value */,
+			1,  /* default value */
+			G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+	g_object_class_install_property (gobject_class,
+			GST_HCV_KITTEN_PROPORTION,
+			pspec);
+	pspec = g_param_spec_float ("kitten_alpha",
+			"Alpha value for kitten",
+			"Set alpha of kitten imagem to be paint",
+			0 /* minimum value */,
+			1 /* maximum value */,
+			1,  /* default value */
+			G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+	g_object_class_install_property (gobject_class,
+			GST_HCV_KITTEN_ALPHA,
+			pspec);
 }
 
 static void
 gst_hcv_kitten_init (GstHcvKitten *trans, GstBaseTransformClass *klass G_GNUC_UNUSED)
 {
+	g_print("INIT\n");
 	trans->priv = (GstHcvKittenPriv *) malloc (sizeof (GstHcvKittenPriv));
 	trans->priv->left = 0;
 	trans->priv->right = 0;
 	trans->priv->top = 0;
 	trans->priv->bottom = 0;
-	trans->priv->image = cairo_image_surface_create_from_png ("img/kitten-0.6.png");
-	trans->priv->kitten_width = cairo_image_surface_get_width (trans->priv->image);
 	trans->priv->scaled_context = NULL;
 	trans->priv->surface = NULL;
+
 }
 
 GType
