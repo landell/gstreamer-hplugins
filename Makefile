@@ -35,7 +35,8 @@ v4l2capture: $(OBJECTS)
 	$(CC) -o v4l2capture $(OBJECTS) $(LIBS)
 
 install: all
-	install -D trackerlaunch.py $(INSTALL_DIR)/trackerlaunch.py
+	install -D kitten $(INSTALL_DIR)/kitten
+	install -D libgsthcv.so $(INSTALL_DIR)/libgsthcv.so
 
 clean:
 	rm -f v4l2capture $(OBJECTS) v4l2capture-client client.o \
