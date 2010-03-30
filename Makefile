@@ -8,6 +8,8 @@ OBJECTS = v4l2capture.o device.o negotiation.o hcverror.o hcvloop.o \
 GST_OBJECTS = gstreamer.o facetracker.o crop.o ycbcr.o kitten.o
 DESTDIR ?=
 INSTALL_DIR := $(DESTDIR)/usr/bin/
+GST_LIB_DIR := $(DESTDIR)/usr/lib/gstreamer-0.10
+LIB_DIR := $(DESTDIR)/usr/lib
 DATA_DIR := $(DESTDIR)/var/lib/hcv
 HEADER_FILE = $(DATA_DIR)/header.jpg
 
@@ -36,7 +38,8 @@ v4l2capture: $(OBJECTS)
 
 install: all
 	install -D kitten $(INSTALL_DIR)/kitten
-	install -D libgsthcv.so $(INSTALL_DIR)/libgsthcv.so
+	install -D libgsthcv.so $(GST_LIB_DIR)/libgsthcv.so
+	install -D trackerlaunch.py $(LIB_DIR)/kitten/trackerlaunch.py
 
 clean:
 	rm -f v4l2capture $(OBJECTS) v4l2capture-client client.o \
