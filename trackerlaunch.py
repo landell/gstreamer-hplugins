@@ -6,7 +6,7 @@ import pygst
 pygst.require("0.10")
 import gst
 
-class Gst_New_Launch:
+class KittenSecrecy():
 
 	def __init__ (self):
 
@@ -45,6 +45,6 @@ class Gst_New_Launch:
 			self.player.set_state(gst.STATE_NULL) 
 			loop.quit()
 
-Gst_New_Launch()
+KittenSecrecy()
 loop = gobject.MainLoop()
 loop.run()
