@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 import gobject
@@ -43,8 +42,8 @@ class KittenSecrecy():
 			self.kitten.set_property("window_bottom",structure["bottom"]);
 		elif t == gst.MESSAGE_ERROR: 
 			self.player.set_state(gst.STATE_NULL) 
-			loop.quit()
+			self.loop.quit()
 
-KittenSecrecy()
-loop = gobject.MainLoop()
-loop.run()
+	def run(self):
+		self.loop = gobject.MainLoop()
+		self.loop.run()
