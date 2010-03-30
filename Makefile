@@ -14,6 +14,7 @@ DATA_DIR := $(DESTDIR)/var/lib/hcv
 HEADER_FILE = $(DATA_DIR)/header.jpg
 
 all: libgsthcv.so
+	sed 's,@LIBDIR@,$(LIB_DIR),g' < kitten.in > kitten
 
 gstreamer.o: gstreamer.c
 	$(CC) -c -o $@ $< `pkg-config --cflags gstreamer-0.10`
@@ -37,4 +38,4 @@ install: all
 
 clean:
 	rm -f $(OBJECTS) \
-		gstreamer.o libgsthcv.so ycbcr.o kitten.o
+		gstreamer.o libgsthcv.so ycbcr.o kitten.o kitten

@@ -18,7 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import sys
-sys.path.append("/home/luciana/holoscopio/install/lib")
+sys.path.append("@LIBDIR@")
 
 import gobject
 import pygst
