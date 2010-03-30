@@ -3,7 +3,7 @@ CROSS_COMPILE ?=
 CFLAGS ?= -g -Wall -Wextra
 LIBS = -ljpeg
 CC := $(CROSS_COMPILE)$(GCC) $(CFLAGS) -fPIC
-OBJECTS = v4l2capture.o device.o negotiation.o hcverror.o hcvloop.o \
+OBJECTS = device.o negotiation.o hcverror.o hcvloop.o \
 	hcvconv.o crop.o save.o savejpeg.o hcvmemsrc.o facetracker.o
 GST_OBJECTS = gstreamer.o facetracker.o crop.o ycbcr.o kitten.o
 DESTDIR ?=
@@ -13,7 +13,7 @@ LIB_DIR := $(DESTDIR)/usr/lib
 DATA_DIR := $(DESTDIR)/var/lib/hcv
 HEADER_FILE = $(DATA_DIR)/header.jpg
 
-all: v4l2capture v4l2capture-client libgsthcv.so
+all: libgsthcv.so
 
 gstreamer.o: gstreamer.c
 	$(CC) -c -o $@ $< `pkg-config --cflags gstreamer-0.10`
@@ -30,17 +30,11 @@ libgsthcv.so: $(GST_OBJECTS)
 .c.o:
 	$(CC) -c -o $@ $<
 
-v4l2capture-client: client.o
-	$(CC) -o v4l2capture-client client.o
-
-v4l2capture: $(OBJECTS)
-	$(CC) -o v4l2capture $(OBJECTS) $(LIBS)
-
 install: all
 	install -D kitten $(INSTALL_DIR)/kitten
 	install -D libgsthcv.so $(GST_LIB_DIR)/libgsthcv.so
 	install -D trackerlaunch.py $(LIB_DIR)/kitten/trackerlaunch.py
 
 clean:
-	rm -f v4l2capture $(OBJECTS) v4l2capture-client client.o \
+	rm -f $(OBJECTS) \
 		gstreamer.o libgsthcv.so ycbcr.o kitten.o
