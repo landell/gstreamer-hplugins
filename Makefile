@@ -35,8 +35,7 @@ v4l2capture: $(OBJECTS)
 	$(CC) -o v4l2capture $(OBJECTS) $(LIBS)
 
 install: all
-	install -D v4l2capture $(INSTALL_DIR)/v4l2capture
-	install -D v4l2capture-client $(INSTALL_DIR)/v4l2capture-client
+	install -D trackerlaunch.py $(INSTALL_DIR)/trackerlaunch.py
 
 clean:
 	rm -f v4l2capture $(OBJECTS) v4l2capture-client client.o \
