@@ -24,10 +24,11 @@ import gobject
 import pygst
 pygst.require("0.10")
 import gst
-import kitten
+import hcv
+import getopt
 
 def main():
-	obj = kitten.trackerlaunch.KittenSecrecy()
+	obj = hcv.trackerlaunch.KittenSecrecy()
 	obj.run()
 
 
