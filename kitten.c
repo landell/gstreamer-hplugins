@@ -344,8 +344,8 @@ gst_hcv_kitten_class_init (GstBaseTransformClass *klass)
 	GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 	GParamSpec *pspec;
 
-  klass->transform_ip = gst_hcv_kitten_transform_ip;
-  gst_element_class_set_details (GST_ELEMENT_CLASS (klass), &kitten_details);
+	klass->transform_ip = gst_hcv_kitten_transform_ip;
+	gst_element_class_set_details (GST_ELEMENT_CLASS (klass), &kitten_details);
 
 	gobject_class->set_property = gst_hcv_kitten_set_property;
 	gobject_class->get_property = gst_hcv_kitten_get_property;
