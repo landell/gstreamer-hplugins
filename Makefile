@@ -2,7 +2,6 @@ GCC = gcc
 CROSS_COMPILE ?=
 CFLAGS ?= -g -Wall -Wextra
 LIBS = -ljpeg
-CC := $(CROSS_COMPILE)$(GCC) $(CFLAGS) -fPIC
 OBJECTS = device.o negotiation.o hcverror.o hcvloop.o \
 	hcvconv.o crop.o save.o savejpeg.o hcvmemsrc.o facetracker.o
 GST_OBJECTS = gstreamer.o facetracker.o crop.o ycbcr.o kitten.o
@@ -10,8 +9,9 @@ DESTDIR ?=
 INSTALL_DIR := $(DESTDIR)/usr/bin/
 GST_LIB_DIR := $(DESTDIR)/usr/lib/gstreamer-0.10
 LIB_DIR := $(DESTDIR)/usr/lib
-DATA_DIR := $(DESTDIR)/var/lib/hcv
-HEADER_FILE = $(DATA_DIR)/header.jpg
+DATADIR := $(DESTDIR)/usr/share
+CFLAGS += -DDATADIR="\"$(DATADIR)\""
+CC := $(CROSS_COMPILE)$(GCC) $(CFLAGS) -fPIC
 
 all: libgsthcv.so
 	sed 's,@LIBDIR@,$(LIB_DIR),g' < kitten.in > kitten
@@ -35,6 +35,7 @@ install: all
 	install -D kitten $(INSTALL_DIR)/kitten
 	install -D libgsthcv.so $(GST_LIB_DIR)/libgsthcv.so
 	install -D trackerlaunch.py $(LIB_DIR)/kitten/trackerlaunch.py
+	install -D img/kitten.png $(DATADIR)/hcv/kitten.png
 
 clean:
 	rm -f $(OBJECTS) \

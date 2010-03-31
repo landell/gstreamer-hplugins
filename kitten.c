@@ -26,6 +26,7 @@
 #include <cairo.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 GType gst_hcv_kitten_get_type (void);
 
@@ -343,6 +344,8 @@ gst_hcv_kitten_class_init (GstBaseTransformClass *klass)
 {
 	GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 	GParamSpec *pspec;
+	gchar *relative_path = "/hcv/kitten.png";
+	gchar *kitten_path = g_strconcat(DATADIR, relative_path, NULL);
 
 	klass->transform_ip = gst_hcv_kitten_transform_ip;
 	gst_element_class_set_details (GST_ELEMENT_CLASS (klass), &kitten_details);
@@ -395,7 +398,7 @@ gst_hcv_kitten_class_init (GstBaseTransformClass *klass)
 	pspec = g_param_spec_string ("kitten_image",
 			"Kitten png image to be used",
 			"Set png image filename",
-			"img/kitten-0.6.png",  /* default value */
+			kitten_path,  /* default value */
 			G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 	g_object_class_install_property (gobject_class,
 			GST_HCV_KITTEN_IMAGE,
