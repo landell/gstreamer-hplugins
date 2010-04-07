@@ -34,10 +34,10 @@ libgsthcv.so: $(GST_OBJECTS)
 
 install: all
 	install -D kitten $(DESTDIR)$(INSTALL_DIR)/kitten
-	install -D libgsthcv.so $(DESTDIR)$(GST_LIB_DIR)/libgsthcv.so
-	install -D hcv/trackerlaunch.py $(DESTDIR)$(LIB_DIR)/hcv/trackerlaunch.py
-	install -D hcv/__init__.py $(DESTDIR)$(LIB_DIR)/hcv/__init__.py
-	install -D img/kitten.png $(DESTDIR)$(DATADIR)/hcv/kitten.png
+	install -D --mode=644 libgsthcv.so $(DESTDIR)$(GST_LIB_DIR)/libgsthcv.so
+	install -D --mode=644 hcv/trackerlaunch.py $(DESTDIR)$(LIB_DIR)/hcv/trackerlaunch.py
+	install -D --mode=644 hcv/__init__.py $(DESTDIR)$(LIB_DIR)/hcv/__init__.py
+	install -D --mode=644 img/kitten.png $(DESTDIR)$(DATADIR)/hcv/kitten.png
 
 clean:
 	rm -f $(OBJECTS) \
