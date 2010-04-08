@@ -1,6 +1,6 @@
 INSTALL
 
-The default path for instalation is /usr/bin. To install v4l2capture
-automatically, use:
+The default path for instalation is /usr/local/bin. To install
+cairoimageoverlay automatically, use:
 
 # make install
