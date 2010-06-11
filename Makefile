@@ -3,7 +3,7 @@ CROSS_COMPILE ?=
 CFLAGS ?= -g -Wall -Wextra
 LIBS = -ljpeg
 OBJECTS = hcverror.o
-GST_OBJECTS = gstreamer.o kitten.o
+GST_OBJECTS = gstreamer.o cairoimageoverlay.o
 DESTDIR ?=
 PREFIX ?= /usr/local
 INSTALL_DIR := $(PREFIX)/bin/
@@ -18,7 +18,7 @@ all: libgsthcv.so
 gstreamer.o: gstreamer.c
 	$(CC) -c -o $@ $< `pkg-config --cflags gstreamer-0.10`
 
-kitten.o: kitten.c
+cairoimageoverlay.o: cairoimageoverlay.c
 	$(CC) -c -o $@ $< `pkg-config --cflags gstreamer-0.10 gstreamer-plugins-base-0.10 cairo`
 
 libgsthcv.so: $(GST_OBJECTS)
@@ -33,4 +33,4 @@ install: all
 
 clean:
 	rm -f $(OBJECTS) \
-		gstreamer.o libgsthcv.so ycbcr.o kitten.o
+		gstreamer.o libgsthcv.so ycbcr.o cairoimageoverlay.o

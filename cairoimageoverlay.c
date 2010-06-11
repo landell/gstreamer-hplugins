@@ -21,35 +21,34 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
-#include "crop.h"
 
 #include <cairo.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-GType gst_hcv_kitten_get_type (void);
+GType hcv_image_overlay_get_type (void);
 
-#define HCV_TYPE_KITTEN (gst_hcv_kitten_get_type ())
-#define HCV_KITTEN(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), HCV_TYPE_KITTEN, GstHcvKitten))
+#define HCV_TYPE_IMAGE_OVERLAY (hcv_image_overlay_get_type ())
+#define HCV_IMAGE_OVERLAY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), HCV_TYPE_IMAGE_OVERLAY, HcvImageOverlay))
 
-typedef struct _GstHcvKittenPriv GstHcvKittenPriv;
-typedef struct _GstHcvKitten GstHcvKitten;
+typedef struct _HcvImageOverlayPriv HcvImageOverlayPriv;
+typedef struct _HcvImageOverlay HcvImageOverlay;
 
 enum
 {
-	  PROP_0,
+	PROP_0,
 
-		GST_HCV_KITTEN_LEFT,
-		GST_HCV_KITTEN_RIGHT,
-		GST_HCV_KITTEN_BOTTOM,
-		GST_HCV_KITTEN_TOP,
-		GST_HCV_KITTEN_IMAGE,
-		GST_HCV_KITTEN_PROPORTION,
-		GST_HCV_KITTEN_ALPHA
+	HCV_IMAGE_OVERLAY_LEFT,
+	HCV_IMAGE_OVERLAY_RIGHT,
+	HCV_IMAGE_OVERLAY_BOTTOM,
+	HCV_IMAGE_OVERLAY_TOP,
+	HCV_IMAGE_OVERLAY_IMAGE,
+	HCV_IMAGE_OVERLAY_PROPORTION,
+	HCV_IMAGE_OVERLAY_ALPHA
 };
 
-struct _GstHcvKittenPriv
+struct _HcvImageOverlayPriv
 {
 	int left;
 	int right;
@@ -61,18 +60,18 @@ struct _GstHcvKittenPriv
 	cairo_surface_t *image;
 	cairo_t *scaled_context;
 	cairo_surface_t *surface;
-	float kitten_width;
+	float width;
 };
 
-struct _GstHcvKitten
+struct _HcvImageOverlay
 {
 	GstBaseTransform parent_instance;
 
-	GstHcvKittenPriv *priv;
+	HcvImageOverlayPriv *priv;
 };
 
-static gboolean 
-gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
+static gboolean
+hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 {
 	GstBuffer *nbuf = gst_buffer_ref (gbuf);
 	GstCaps *caps;
@@ -93,7 +92,8 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 	if (stride == -1)
 	{
 		caps = gst_buffer_get_caps (nbuf);
-		if (!gst_video_format_parse_caps (caps, &format, &width, &height)) {
+		if (!gst_video_format_parse_caps (caps, &format, &width, &height))
+		{
 			gst_caps_unref (caps);
 			g_warning ("Could not parse caps");
 			return FALSE;
@@ -130,7 +130,7 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 		self->priv->surface = cairo_image_surface_create (cairo_format, width, height);
 		self->priv->scaled_context = cairo_create (self->priv->surface);
 
-		scale = (desired_width + 1) / self->priv->kitten_width;
+		scale = (desired_width + 1) / self->priv->width;
 		cairo_scale (self->priv->scaled_context, scale, scale);
 		g_print ("%s\n",cairo_status_to_string (cairo_status (self->priv->scaled_context)));
 		g_print ("Width changed========================================\n");
@@ -142,7 +142,7 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 			self->priv->surface = cairo_image_surface_create (cairo_format, width, height);
 			self->priv->scaled_context = cairo_create (self->priv->surface);
 
-			scale = (desired_width + 1) / self->priv->kitten_width;
+			scale = (desired_width + 1) / self->priv->width;
 			cairo_scale (self->priv->scaled_context, scale, scale);
 			g_print ("%s\n",cairo_status_to_string (cairo_status (self->priv->scaled_context)));
 			g_print ("First creation of scaled_context========================================\n");
@@ -176,18 +176,18 @@ gst_hcv_buffer_kitten (GstHcvKitten *self, GstBuffer *gbuf)
 }
 
 static GstFlowReturn
-gst_hcv_kitten_transform_ip (GstBaseTransform *trans, GstBuffer *buf)
+hcv_image_overlay_transform_ip (GstBaseTransform *trans, GstBuffer *buf)
 {
   gboolean res;
-  res = gst_hcv_buffer_kitten (HCV_KITTEN (trans), buf);
+  res = hcv_buffer_image_overlay (HCV_IMAGE_OVERLAY (trans), buf);
   return GST_FLOW_OK;
 }
 
-static GstElementDetails kitten_details =
-GST_ELEMENT_DETAILS ("HCV Kitten Secrecy", "Filter/Kitten", "Put image in detected space",
+static GstElementDetails image_overlay_details =
+GST_ELEMENT_DETAILS ("HCV Image Overlay", "Filter/Editor/Video", "Put image in defined space",
 "Luciana Fujii Pontello <luciana@holoscopio.com>");
 
-static GstStaticPadTemplate srctemplate = 
+static GstStaticPadTemplate srctemplate =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
 		GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA));
 
@@ -195,47 +195,47 @@ static GstStaticPadTemplate sinktemplate =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
                          GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA));
 
-static void 
-gst_hcv_kitten_set_property (GObject      *object,
+static void
+hcv_image_overlay_set_property (GObject      *object,
                              guint         property_id,
                              const GValue *value,
                              GParamSpec   *pspec)
 {
-	 GstHcvKitten *self = HCV_KITTEN (object);
+	 HcvImageOverlay *self = HCV_IMAGE_OVERLAY (object);
 
 	 switch (property_id)
 	 {
-		 case GST_HCV_KITTEN_LEFT:
+		 case HCV_IMAGE_OVERLAY_LEFT:
 			 self->priv->left = g_value_get_int (value);
 			 g_print ("left: %d\n", self->priv->left);
 			 break;
 
-		 case GST_HCV_KITTEN_RIGHT:
+		 case HCV_IMAGE_OVERLAY_RIGHT:
 			 self->priv->right = g_value_get_int (value);
 			 g_print ("right: %d\n", self->priv->right);
 			 break;
 
-		 case GST_HCV_KITTEN_TOP:
+		 case HCV_IMAGE_OVERLAY_TOP:
 			 self->priv->top = g_value_get_int (value);
 			 g_print ("top: %d\n", self->priv->top);
 			 break;
 
-		 case GST_HCV_KITTEN_BOTTOM:
+		 case HCV_IMAGE_OVERLAY_BOTTOM:
 			 self->priv->bottom = g_value_get_int (value);
 			 g_print ("bottom: %d\n", self->priv->bottom);
 			 break;
 
-		 case GST_HCV_KITTEN_IMAGE:
+		 case HCV_IMAGE_OVERLAY_IMAGE:
 			 self->priv->img_path = g_string_new (g_value_get_string (value));
 			 g_print ("image: %s\n", self->priv->img_path->str);
 			 break;
 
-		 case GST_HCV_KITTEN_PROPORTION:
+		 case HCV_IMAGE_OVERLAY_PROPORTION:
 			 self->priv->proportion = g_value_get_float (value);
 			 g_print ("proportion: %f\n", self->priv->proportion);
 			 break;
 
-		 case GST_HCV_KITTEN_ALPHA:
+		 case HCV_IMAGE_OVERLAY_ALPHA:
 			 self->priv->alpha_value = g_value_get_float (value);
 			 g_print ("alpha value: %f\n", self->priv->alpha_value);
 			 break;
@@ -248,9 +248,9 @@ gst_hcv_kitten_set_property (GObject      *object,
 }
 
 static void
-gst_hcv_kitten_dispose (GObject *object)
+hcv_image_overlay_dispose (GObject *object)
 {
-	GstHcvKitten *self = HCV_KITTEN(object);
+	HcvImageOverlay *self = HCV_IMAGE_OVERLAY(object);
 	if (self->priv->image != NULL)
 	{
 		cairo_surface_destroy (self->priv->image);
@@ -268,47 +268,47 @@ gst_hcv_kitten_dispose (GObject *object)
 	}
 }
 
-static void 
-gst_hcv_kitten_get_property (GObject      *object,
+static void
+hcv_image_overlay_get_property (GObject      *object,
                              guint         property_id,
                              GValue *value,
                              GParamSpec   *pspec)
 {
-	 GstHcvKitten *self = HCV_KITTEN (object);
+	 HcvImageOverlay *self = HCV_IMAGE_OVERLAY (object);
 
 	 switch (property_id)
 	 {
-		 case GST_HCV_KITTEN_LEFT:
+		 case HCV_IMAGE_OVERLAY_LEFT:
 			 g_value_set_int (value, self->priv->left);
 			 g_print ("left: %d\n", self->priv->left);
 			 break;
 
-		 case GST_HCV_KITTEN_RIGHT:
+		 case HCV_IMAGE_OVERLAY_RIGHT:
 			 g_value_set_int (value, self->priv->right);
 			 g_print ("right: %d\n", self->priv->right);
 			 break;
 
-		 case GST_HCV_KITTEN_TOP:
+		 case HCV_IMAGE_OVERLAY_TOP:
 			 g_value_set_int (value, self->priv->top);
 			 g_print ("top: %d\n", self->priv->top);
 			 break;
 
-		 case GST_HCV_KITTEN_BOTTOM:
+		 case HCV_IMAGE_OVERLAY_BOTTOM:
 			 g_value_set_int (value, self->priv->bottom);
 			 g_print ("bottom: %d\n", self->priv->bottom);
 			 break;
 
-		 case GST_HCV_KITTEN_IMAGE:
+		 case HCV_IMAGE_OVERLAY_IMAGE:
 			 g_value_set_string (value, self->priv->img_path->str);
 			 g_print ("image: %s\n", self->priv->img_path->str);
 			 break;
 
-		 case GST_HCV_KITTEN_PROPORTION:
+		 case HCV_IMAGE_OVERLAY_PROPORTION:
 			 g_value_set_float (value, self->priv->proportion);
 			 g_print ("proportion: %f\n", self->priv->proportion);
 			 break;
 
-		 case GST_HCV_KITTEN_ALPHA:
+		 case HCV_IMAGE_OVERLAY_ALPHA:
 			 g_value_set_float (value, self->priv->alpha_value);
 			 g_print ("alpha value: %f\n", self->priv->alpha_value);
 			 break;
@@ -321,7 +321,7 @@ gst_hcv_kitten_get_property (GObject      *object,
 }
 
 static void
-gst_hcv_kitten_base_init (GstBaseTransformClass *klass)
+hcv_image_overlay_base_init (GstBaseTransformClass *klass)
 {
   GstPadTemplate *src;
   GstPadTemplate *sink;
@@ -332,28 +332,28 @@ gst_hcv_kitten_base_init (GstBaseTransformClass *klass)
 }
 
 static void
-gst_hcv_kitten_constructed (GObject *object)
+hcv_image_overlay_constructed (GObject *object)
 {
-	GstHcvKitten *self = HCV_KITTEN (object);
+	HcvImageOverlay *self = HCV_IMAGE_OVERLAY (object);
 	self->priv->image = cairo_image_surface_create_from_png (self->priv->img_path->str);
-	self->priv->kitten_width = cairo_image_surface_get_width (self->priv->image);
+	self->priv->width = cairo_image_surface_get_width (self->priv->image);
 }
 
 static void
-gst_hcv_kitten_class_init (GstBaseTransformClass *klass)
+hcv_image_overlay_class_init (GstBaseTransformClass *klass)
 {
 	GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 	GParamSpec *pspec;
 	gchar *relative_path = "/hcv/kitten.png";
-	gchar *kitten_path = g_strconcat(DATADIR, relative_path, NULL);
+	gchar *path = g_strconcat(DATADIR, relative_path, NULL);
 
-	klass->transform_ip = gst_hcv_kitten_transform_ip;
-	gst_element_class_set_details (GST_ELEMENT_CLASS (klass), &kitten_details);
+	klass->transform_ip = hcv_image_overlay_transform_ip;
+	gst_element_class_set_details (GST_ELEMENT_CLASS (klass), &image_overlay_details);
 
-	gobject_class->set_property = gst_hcv_kitten_set_property;
-	gobject_class->get_property = gst_hcv_kitten_get_property;
-	gobject_class->dispose = gst_hcv_kitten_dispose;
-	gobject_class->constructed = gst_hcv_kitten_constructed;
+	gobject_class->set_property = hcv_image_overlay_set_property;
+	gobject_class->get_property = hcv_image_overlay_get_property;
+	gobject_class->dispose = hcv_image_overlay_dispose;
+	gobject_class->constructed = hcv_image_overlay_constructed;
 
 	pspec = g_param_spec_int ("window_left",
 			"Left coordinate for window",
@@ -363,7 +363,7 @@ gst_hcv_kitten_class_init (GstBaseTransformClass *klass)
 			2  /* default value */,
 			G_PARAM_READWRITE);
 	g_object_class_install_property (gobject_class,
-			GST_HCV_KITTEN_LEFT,
+			HCV_IMAGE_OVERLAY_LEFT,
 			pspec);
 	pspec = g_param_spec_int ("window_right",
 			"Right coordinate for window",
@@ -373,7 +373,7 @@ gst_hcv_kitten_class_init (GstBaseTransformClass *klass)
 			2  /* default value */,
 			G_PARAM_READWRITE);
 	g_object_class_install_property (gobject_class,
-			GST_HCV_KITTEN_RIGHT,
+			HCV_IMAGE_OVERLAY_RIGHT,
 			pspec);
 	pspec = g_param_spec_int ("window_top",
 			"Top coordinate for window",
@@ -383,7 +383,7 @@ gst_hcv_kitten_class_init (GstBaseTransformClass *klass)
 			2  /* default value */,
 			G_PARAM_READWRITE);
 	g_object_class_install_property (gobject_class,
-			GST_HCV_KITTEN_TOP,
+			HCV_IMAGE_OVERLAY_TOP,
 			pspec);
 	pspec = g_param_spec_int ("window_bottom",
 			"Bottom coordinate for window",
@@ -393,43 +393,43 @@ gst_hcv_kitten_class_init (GstBaseTransformClass *klass)
 			2  /* default value */,
 			G_PARAM_READWRITE);
 	g_object_class_install_property (gobject_class,
-			GST_HCV_KITTEN_BOTTOM,
+			HCV_IMAGE_OVERLAY_BOTTOM,
 			pspec);
-	pspec = g_param_spec_string ("kitten_image",
-			"Kitten png image to be used",
+	pspec = g_param_spec_string ("image",
+			"png image to be used",
 			"Set png image filename",
-			kitten_path,  /* default value */
+			path,  /* default value */
 			G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 	g_object_class_install_property (gobject_class,
-			GST_HCV_KITTEN_IMAGE,
+			HCV_IMAGE_OVERLAY_IMAGE,
 			pspec);
-	pspec = g_param_spec_float ("kitten_proportion",
-			"Size of kitten in terms of window",
-			"Set proportion of kitten in terms of window",
+	pspec = g_param_spec_float ("image_proportion",
+			"Size of image in terms of window",
+			"Set proportion of image in terms of window",
 			0 /* minimum value */,
 			G_MAXFLOAT /* maximum value */,
 			1,  /* default value */
 			G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 	g_object_class_install_property (gobject_class,
-			GST_HCV_KITTEN_PROPORTION,
+			HCV_IMAGE_OVERLAY_PROPORTION,
 			pspec);
-	pspec = g_param_spec_float ("kitten_alpha",
-			"Alpha value for kitten",
-			"Set alpha of kitten imagem to be paint",
+	pspec = g_param_spec_float ("image_alpha",
+			"Alpha value for image",
+			"Set alpha to be paint",
 			0 /* minimum value */,
 			1 /* maximum value */,
 			1,  /* default value */
 			G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 	g_object_class_install_property (gobject_class,
-			GST_HCV_KITTEN_ALPHA,
+			HCV_IMAGE_OVERLAY_ALPHA,
 			pspec);
 }
 
 static void
-gst_hcv_kitten_init (GstHcvKitten *trans, GstBaseTransformClass *klass G_GNUC_UNUSED)
+hcv_image_overlay_init (HcvImageOverlay *trans, GstBaseTransformClass *klass G_GNUC_UNUSED)
 {
 	g_print("INIT\n");
-	trans->priv = (GstHcvKittenPriv *) malloc (sizeof (GstHcvKittenPriv));
+	trans->priv = (HcvImageOverlayPriv *) malloc (sizeof (HcvImageOverlayPriv));
 	trans->priv->left = 0;
 	trans->priv->right = 0;
 	trans->priv->top = 0;
@@ -440,25 +440,25 @@ gst_hcv_kitten_init (GstHcvKitten *trans, GstBaseTransformClass *klass G_GNUC_UN
 }
 
 GType
-gst_hcv_kitten_get_type (void)
+hcv_image_overlay_get_type (void)
 {
   static GType type = 0;
   if (type == 0)
     {
       static const GTypeInfo info = {
         sizeof (GstBaseTransformClass),
-        (GBaseInitFunc) gst_hcv_kitten_base_init,
+        (GBaseInitFunc) hcv_image_overlay_base_init,
         NULL,
-        (GClassInitFunc) gst_hcv_kitten_class_init,
+        (GClassInitFunc) hcv_image_overlay_class_init,
         NULL,
         NULL,
         sizeof (GstBaseTransform),
         0,
-        (GInstanceInitFunc) gst_hcv_kitten_init,
+        (GInstanceInitFunc) hcv_image_overlay_init,
 				NULL
       };
       type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
-                                     "GstHcvKittenType", &info, 0);
+                                     "HcvImageOverlayType", &info, 0);
     }
   return type;
 }
