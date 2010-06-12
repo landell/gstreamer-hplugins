@@ -425,7 +425,7 @@ hcv_image_overlay_class_init (GstBaseTransformClass *klass)
 	g_object_class_install_property (gobject_class,
 			HCV_IMAGE_OVERLAY_BOTTOM,
 			pspec);
-	pspec = g_param_spec_string ("image",
+	pspec = g_param_spec_string ("location",
 			"png image to be used",
 			"Set png image filename",
 			NULL,  /* default value */
