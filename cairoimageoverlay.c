@@ -64,6 +64,9 @@ struct _HcvImageOverlayPriv
 	cairo_t *scaled_context;
 	cairo_surface_t *surface;
 	float width;
+	cairo_format_t cairo_format;
+	int buffer_width;
+	int buffer_height;
 };
 
 struct _HcvImageOverlay
@@ -90,47 +93,20 @@ static gboolean
 hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 {
 	GstBuffer *nbuf = gst_buffer_ref (gbuf);
-	GstCaps *caps;
 	cairo_t* cr;
 	cairo_surface_t* surface;
-	static gint width;
-	static gint height;
 	static cairo_format_t cairo_format;
 	static int stride = -1;
-	GstVideoFormat format;
 	float desired_width = 0;
 	static float previous_width = 0;
 	int x;
 	int y;
 
-
-	if (stride == -1)
-	{
-		caps = gst_buffer_get_caps (nbuf);
-		if (!gst_video_format_parse_caps (caps, &format, &width, &height))
-		{
-			gst_caps_unref (caps);
-			g_warning ("Could not parse caps");
-			return FALSE;
-		}
-
-		if (format == GST_VIDEO_FORMAT_ARGB || format == GST_VIDEO_FORMAT_BGRA)
-		{
-			cairo_format = CAIRO_FORMAT_ARGB32;
-			g_print ("Formato é ARGB32\n");
-		}
-		else
-		{
-			cairo_format = CAIRO_FORMAT_RGB24;
-			g_print ("Fomato é RGB24\n");
-		}
-		stride = cairo_format_stride_for_width (cairo_format, width);
-		gst_caps_unref (caps);
-	}
+	stride = cairo_format_stride_for_width (self->priv->cairo_format, self->priv->buffer_width);
 
 	desired_width = (self->priv->right - self->priv->left)* self->priv->proportion;
-	if (desired_width > width)
-		desired_width = width;
+	if (desired_width > self->priv->buffer_width)
+		desired_width = self->priv->buffer_width;
 	g_print ("desired_width: %f\n", desired_width);
 	if (previous_width != desired_width)
 	{
@@ -143,7 +119,7 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 		}
 		previous_width = desired_width;
 
-		hcv_image_overlay_create_surface (self, cairo_format, width, height, desired_width);
+		hcv_image_overlay_create_surface (self, cairo_format, self->priv->buffer_width, self->priv->buffer_height, desired_width);
 
 		g_print ("Width changed========================================\n");
 	}
@@ -151,7 +127,7 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 	{
 		if (self->priv->scaled_context == NULL)
 		{
-			hcv_image_overlay_create_surface (self, cairo_format, width, height, desired_width);
+			hcv_image_overlay_create_surface (self, cairo_format, self->priv->buffer_width, self->priv->buffer_height, desired_width);
 
 			g_print ("First creation of scaled_context========================================\n");
 		}
@@ -165,15 +141,15 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 		cairo_destroy (self->priv->scaled_context);
 		if (self->priv->surface != NULL)
 			cairo_surface_destroy (self->priv->surface);
-		hcv_image_overlay_create_surface (self, cairo_format, width, height, desired_width);
+		hcv_image_overlay_create_surface (self, cairo_format, self->priv->buffer_width, self->priv->buffer_height, desired_width);
 	}
 	self->priv->recreate = 0;
 	g_static_mutex_unlock(&mutex);
 
 	surface = cairo_image_surface_create_for_data (GST_BUFFER_DATA (nbuf),
 			cairo_format,
-			width,
-			height,
+			self->priv->buffer_width,
+			self->priv->buffer_height,
 			stride);
 	cr = cairo_create (surface);
 	x = self->priv->left - desired_width*(self->priv->proportion-1)/2/self->priv->proportion;
@@ -350,6 +326,37 @@ hcv_image_overlay_get_property (GObject      *object,
 	 }
 }
 
+static gboolean
+hcv_image_overlay_setcaps (GstPad *pad, GstCaps *caps)
+{
+	HcvImageOverlay *self = HCV_IMAGE_OVERLAY (GST_OBJECT_PARENT (pad));
+	GstVideoFormat format;
+	gint width;
+	gint height;
+
+	if (!gst_video_format_parse_caps (caps, &format, &width, &height))
+	{
+		g_warning ("Could not parse caps");
+		return FALSE;
+	}
+	self->priv->buffer_width = width;
+	self->priv->buffer_height = height;
+
+	if (format == GST_VIDEO_FORMAT_ARGB || format == GST_VIDEO_FORMAT_BGRA)
+	{
+		self->priv->cairo_format = CAIRO_FORMAT_ARGB32;
+		g_print ("Formato é ARGB32\n");
+	}
+	else
+	{
+		self->priv->cairo_format = CAIRO_FORMAT_RGB24;
+		g_print ("Fomato é RGB24\n");
+	}
+	if (!gst_pad_set_caps (GST_BASE_TRANSFORM_SRC_PAD(self), caps))
+		return FALSE;
+	return TRUE;
+}
+
 static void
 hcv_image_overlay_base_init (GstBaseTransformClass *klass)
 {
@@ -368,8 +375,6 @@ hcv_image_overlay_constructed (GObject *object)
 	self->priv->image = NULL;
 	self->priv->recreate = 0;
 }
-
-
 
 static void
 hcv_image_overlay_class_init (GstBaseTransformClass *klass)
@@ -458,6 +463,7 @@ hcv_image_overlay_class_init (GstBaseTransformClass *klass)
 static void
 hcv_image_overlay_init (HcvImageOverlay *trans, GstBaseTransformClass *klass G_GNUC_UNUSED)
 {
+	GstPad *sink_pad;
 	g_print("INIT\n");
 	trans->priv = (HcvImageOverlayPriv *) malloc (sizeof (HcvImageOverlayPriv));
 	trans->priv->left = 0;
@@ -467,6 +473,8 @@ hcv_image_overlay_init (HcvImageOverlay *trans, GstBaseTransformClass *klass G_G
 	trans->priv->scaled_context = NULL;
 	trans->priv->surface = NULL;
 
+	sink_pad = GST_BASE_TRANSFORM_SINK_PAD(trans);
+	gst_pad_set_setcaps_function (sink_pad, hcv_image_overlay_setcaps);
 }
 
 GType
