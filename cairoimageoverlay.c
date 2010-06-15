@@ -304,11 +304,6 @@ hcv_image_overlay_get_property (GObject      *object,
 			 g_print ("bottom: %d\n", self->priv->bottom);
 			 break;
 
-		 case HCV_IMAGE_OVERLAY_IMAGE:
-			 g_value_set_string (value, self->priv->img_path->str);
-			 g_print ("image: %s\n", self->priv->img_path->str);
-			 break;
-
 		 case HCV_IMAGE_OVERLAY_PROPORTION:
 			 g_value_set_float (value, self->priv->proportion);
 			 g_print ("proportion: %f\n", self->priv->proportion);
@@ -434,7 +429,7 @@ hcv_image_overlay_class_init (GstBaseTransformClass *klass)
 			"png image to be used",
 			"Set png image filename",
 			NULL,  /* default value */
-			G_PARAM_READWRITE);
+			G_PARAM_WRITABLE);
 	g_object_class_install_property (gobject_class,
 			HCV_IMAGE_OVERLAY_IMAGE,
 			pspec);
