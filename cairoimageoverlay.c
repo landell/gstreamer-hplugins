@@ -467,6 +467,10 @@ hcv_image_overlay_init (HcvImageOverlay *trans, GstBaseTransformClass *klass G_G
 	trans->priv->bottom = 0;
 	trans->priv->scaled_context = NULL;
 	trans->priv->surface = NULL;
+	trans->priv->proportion = 1;
+	trans->priv->alpha_value = 1;
+	trans->priv->image = NULL;
+	trans->priv->img_path = NULL;
 
 	sink_pad = GST_BASE_TRANSFORM_SINK_PAD(trans);
 	gst_pad_set_setcaps_function (sink_pad, hcv_image_overlay_setcaps);
