@@ -41,24 +41,20 @@ enum
 {
 	PROP_0,
 
-	HCV_IMAGE_OVERLAY_LEFT,
-	HCV_IMAGE_OVERLAY_RIGHT,
-	HCV_IMAGE_OVERLAY_BOTTOM,
-	HCV_IMAGE_OVERLAY_TOP,
+	HCV_IMAGE_OVERLAY_X,
+	HCV_IMAGE_OVERLAY_Y,
+	HCV_IMAGE_OVERLAY_WIDTH,
 	HCV_IMAGE_OVERLAY_IMAGE,
-	HCV_IMAGE_OVERLAY_PROPORTION,
 	HCV_IMAGE_OVERLAY_ALPHA
 };
 
 struct _HcvImageOverlayPriv
 {
-	int left;
-	int right;
-	int top;
-	int bottom;
+	int x;
+	int y;
+	int image_width;
 	int recreate;
 	GString *img_path;
-	float proportion;
 	float alpha_value;
 	cairo_surface_t *image;
 	cairo_t *scaled_context;
@@ -76,14 +72,14 @@ struct _HcvImageOverlay
 	HcvImageOverlayPriv *priv;
 };
 
-static void hcv_image_overlay_create_surface (HcvImageOverlay *self, cairo_format_t cairo_format, int desired_width)
+static void hcv_image_overlay_create_surface (HcvImageOverlay *self, cairo_format_t cairo_format)
 {
 	float scale;
 
 	self->priv->surface = cairo_image_surface_create ( cairo_format, self->priv->buffer_width, self->priv->buffer_height);
 	self->priv->scaled_context = cairo_create (self->priv->surface);
 
-	scale = (desired_width + 1) / self->priv->real_width;
+	scale = (self->priv->image_width + 1) / self->priv->real_width;
 	cairo_scale (self->priv->scaled_context, scale, scale);
 	g_print ("%s\n",cairo_status_to_string (cairo_status (self->priv->scaled_context)));
 }
@@ -94,20 +90,14 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 	GstBuffer *nbuf = gst_buffer_ref (gbuf);
 	cairo_t* cr;
 	cairo_surface_t* surface;
-	static cairo_format_t cairo_format;
 	static int stride = -1;
-	float desired_width = 0;
 	static float previous_width = 0;
-	int x;
-	int y;
 
 	stride = cairo_format_stride_for_width (self->priv->cairo_format, self->priv->buffer_width);
 
-	desired_width = (self->priv->right - self->priv->left)* self->priv->proportion;
-	if (desired_width > self->priv->buffer_width)
-		desired_width = self->priv->buffer_width;
-	g_print ("desired_width: %f\n", desired_width);
-	if (previous_width != desired_width)
+	if (self->priv->image_width > self->priv->buffer_width)
+		self->priv->image_width = self->priv->buffer_width;
+	if (previous_width != self->priv->image_width)
 	{
 		/*If there was a scaled context, destroy it to create a new one*/
 		if (self->priv->scaled_context != NULL)
@@ -116,9 +106,9 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 			if (self->priv->surface != NULL)
 				cairo_surface_destroy (self->priv->surface);
 		}
-		previous_width = desired_width;
+		previous_width = self->priv->image_width;
 
-		hcv_image_overlay_create_surface (self, self->priv->cairo_format, desired_width);
+		hcv_image_overlay_create_surface (self, self->priv->cairo_format);
 
 		g_print ("Width changed========================================\n");
 	}
@@ -126,7 +116,7 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 	{
 		if (self->priv->scaled_context == NULL)
 		{
-			hcv_image_overlay_create_surface (self, self->priv->cairo_format, desired_width);
+			hcv_image_overlay_create_surface (self, self->priv->cairo_format);
 
 			g_print ("First creation of scaled_context========================================\n");
 		}
@@ -140,7 +130,7 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 		cairo_destroy (self->priv->scaled_context);
 		if (self->priv->surface != NULL)
 			cairo_surface_destroy (self->priv->surface);
-		hcv_image_overlay_create_surface (self, self->priv->cairo_format, desired_width);
+		hcv_image_overlay_create_surface (self, self->priv->cairo_format);
 	}
 	self->priv->recreate = 0;
 	g_static_mutex_unlock(&mutex);
@@ -151,15 +141,9 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 			self->priv->buffer_height,
 			stride);
 	cr = cairo_create (surface);
-	x = self->priv->left - desired_width*(self->priv->proportion-1)/2/self->priv->proportion;
-	if (x < 0)
-		x = 0;
-	y = self->priv->top - desired_width*(self->priv->proportion-1)/2.5/self->priv->proportion;
-	if (y < 0)
-		y = 0;
-	g_print ("X: %d, Y: %d   %d - %f\n", x, y, self->priv->left, desired_width*0.25);
+	g_print ("X: %d, Y: %d - %d\n", self->priv->x, self->priv->y, self->priv->image_width);
 
-	cairo_set_source_surface (cr, self->priv->surface, x, y);
+	cairo_set_source_surface (cr, self->priv->surface, self->priv->x, self->priv->y);
 	cairo_paint_with_alpha (cr, self->priv->alpha_value);
 
 	cairo_destroy (cr);
@@ -209,35 +193,25 @@ hcv_image_overlay_set_property (GObject      *object,
 
 	 switch (property_id)
 	 {
-		 case HCV_IMAGE_OVERLAY_LEFT:
-			 self->priv->left = g_value_get_int (value);
-			 g_print ("left: %d\n", self->priv->left);
+		 case HCV_IMAGE_OVERLAY_X:
+			 self->priv->x = g_value_get_int (value);
+			 g_print ("x: %d\n", self->priv->x);
 			 break;
 
-		 case HCV_IMAGE_OVERLAY_RIGHT:
-			 self->priv->right = g_value_get_int (value);
-			 g_print ("right: %d\n", self->priv->right);
+		 case HCV_IMAGE_OVERLAY_Y:
+			 self->priv->y = g_value_get_int (value);
+			 g_print ("y: %d\n", self->priv->y);
 			 break;
 
-		 case HCV_IMAGE_OVERLAY_TOP:
-			 self->priv->top = g_value_get_int (value);
-			 g_print ("top: %d\n", self->priv->top);
-			 break;
-
-		 case HCV_IMAGE_OVERLAY_BOTTOM:
-			 self->priv->bottom = g_value_get_int (value);
-			 g_print ("bottom: %d\n", self->priv->bottom);
+		 case HCV_IMAGE_OVERLAY_WIDTH:
+			 self->priv->image_width = g_value_get_int (value);
+			 g_print ("width: %d\n", self->priv->image_width);
 			 break;
 
 		 case HCV_IMAGE_OVERLAY_IMAGE:
 			 self->priv->img_path = g_string_new (g_value_get_string (value));
 			 hcv_image_overlay_define_image(self, self->priv->img_path);
 			 g_print ("image: %s\n", self->priv->img_path->str);
-			 break;
-
-		 case HCV_IMAGE_OVERLAY_PROPORTION:
-			 self->priv->proportion = g_value_get_float (value);
-			 g_print ("proportion: %f\n", self->priv->proportion);
 			 break;
 
 		 case HCV_IMAGE_OVERLAY_ALPHA:
@@ -283,29 +257,19 @@ hcv_image_overlay_get_property (GObject      *object,
 
 	 switch (property_id)
 	 {
-		 case HCV_IMAGE_OVERLAY_LEFT:
-			 g_value_set_int (value, self->priv->left);
-			 g_print ("left: %d\n", self->priv->left);
+		 case HCV_IMAGE_OVERLAY_X:
+			 g_value_set_int (value, self->priv->x);
+			 g_print ("x: %d\n", self->priv->x);
 			 break;
 
-		 case HCV_IMAGE_OVERLAY_RIGHT:
-			 g_value_set_int (value, self->priv->right);
-			 g_print ("right: %d\n", self->priv->right);
+		 case HCV_IMAGE_OVERLAY_Y:
+			 g_value_set_int (value, self->priv->y);
+			 g_print ("y: %d\n", self->priv->y);
 			 break;
 
-		 case HCV_IMAGE_OVERLAY_TOP:
-			 g_value_set_int (value, self->priv->top);
-			 g_print ("top: %d\n", self->priv->top);
-			 break;
-
-		 case HCV_IMAGE_OVERLAY_BOTTOM:
-			 g_value_set_int (value, self->priv->bottom);
-			 g_print ("bottom: %d\n", self->priv->bottom);
-			 break;
-
-		 case HCV_IMAGE_OVERLAY_PROPORTION:
-			 g_value_set_float (value, self->priv->proportion);
-			 g_print ("proportion: %f\n", self->priv->proportion);
+		 case HCV_IMAGE_OVERLAY_WIDTH:
+			 g_value_set_int (value, self->priv->image_width);
+			 g_print ("image_width: %d\n", self->priv->image_width);
 			 break;
 
 		 case HCV_IMAGE_OVERLAY_ALPHA:
@@ -384,46 +348,33 @@ hcv_image_overlay_class_init (GstBaseTransformClass *klass)
 	gobject_class->dispose = hcv_image_overlay_dispose;
 	gobject_class->constructed = hcv_image_overlay_constructed;
 
-	pspec = g_param_spec_int ("window_left",
-			"Left coordinate for window",
-			"Set/Get left coordinate",
+	pspec = g_param_spec_int ("x",
+			"X coordinate for window",
+			"Set/Get x coordinate",
 			0  /* minimum value */,
 			G_MAXINT /* maximum value */,
 			2  /* default value */,
 			G_PARAM_READWRITE);
 	g_object_class_install_property (gobject_class,
-			HCV_IMAGE_OVERLAY_LEFT,
-			pspec);
-	pspec = g_param_spec_int ("window_right",
-			"Right coordinate for window",
-			"Set/Get right coordinate",
+			HCV_IMAGE_OVERLAY_X, pspec);
+	pspec = g_param_spec_int ("y",
+			"Y coordinate for window",
+			"Set/Get y coordinate",
 			0  /* minimum value */,
 			G_MAXINT /* maximum value */,
 			2  /* default value */,
 			G_PARAM_READWRITE);
 	g_object_class_install_property (gobject_class,
-			HCV_IMAGE_OVERLAY_RIGHT,
-			pspec);
-	pspec = g_param_spec_int ("window_top",
-			"Top coordinate for window",
-			"Set/Get top coordinate",
+			HCV_IMAGE_OVERLAY_Y, pspec);
+	pspec = g_param_spec_int ("image_width",
+			"Width to be set for image",
+			"Set/Get image width",
 			0  /* minimum value */,
 			G_MAXINT /* maximum value */,
 			2  /* default value */,
 			G_PARAM_READWRITE);
 	g_object_class_install_property (gobject_class,
-			HCV_IMAGE_OVERLAY_TOP,
-			pspec);
-	pspec = g_param_spec_int ("window_bottom",
-			"Bottom coordinate for window",
-			"Set/Get bottom coordinate",
-			0  /* minimum value */,
-			G_MAXINT /* maximum value */,
-			2  /* default value */,
-			G_PARAM_READWRITE);
-	g_object_class_install_property (gobject_class,
-			HCV_IMAGE_OVERLAY_BOTTOM,
-			pspec);
+			HCV_IMAGE_OVERLAY_WIDTH, pspec);
 	pspec = g_param_spec_string ("location",
 			"png image to be used",
 			"Set png image filename",
@@ -431,16 +382,6 @@ hcv_image_overlay_class_init (GstBaseTransformClass *klass)
 			G_PARAM_WRITABLE);
 	g_object_class_install_property (gobject_class,
 			HCV_IMAGE_OVERLAY_IMAGE,
-			pspec);
-	pspec = g_param_spec_float ("image_proportion",
-			"Size of image in terms of window",
-			"Set proportion of image in terms of window",
-			0 /* minimum value */,
-			G_MAXFLOAT /* maximum value */,
-			1,  /* default value */
-			G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
-	g_object_class_install_property (gobject_class,
-			HCV_IMAGE_OVERLAY_PROPORTION,
 			pspec);
 	pspec = g_param_spec_float ("image_alpha",
 			"Alpha value for image",
@@ -460,14 +401,12 @@ hcv_image_overlay_init (HcvImageOverlay *trans, GstBaseTransformClass *klass G_G
 	GstPad *sink_pad;
 	g_print("INIT\n");
 	trans->priv = (HcvImageOverlayPriv *) malloc (sizeof (HcvImageOverlayPriv));
-	trans->priv->left = 0;
-	trans->priv->right = 0;
-	trans->priv->top = 0;
-	trans->priv->bottom = 0;
+	trans->priv->x = 0;
+	trans->priv->y = 0;
+	trans->priv->image_width = 0;
 	trans->priv->real_width = 0;
 	trans->priv->scaled_context = NULL;
 	trans->priv->surface = NULL;
-	trans->priv->proportion = 1;
 	trans->priv->alpha_value = 1;
 	trans->priv->image = NULL;
 	trans->priv->img_path = NULL;
