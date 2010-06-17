@@ -63,7 +63,7 @@ struct _HcvImageOverlayPriv
 	cairo_surface_t *image;
 	cairo_t *scaled_context;
 	cairo_surface_t *surface;
-	float width;
+	float real_width;
 	cairo_format_t cairo_format;
 	int buffer_width;
 	int buffer_height;
@@ -76,15 +76,14 @@ struct _HcvImageOverlay
 	HcvImageOverlayPriv *priv;
 };
 
-static void hcv_image_overlay_create_surface (HcvImageOverlay *self,
-		cairo_format_t cairo_format, int width, int height, int desired_width)
+static void hcv_image_overlay_create_surface (HcvImageOverlay *self, cairo_format_t cairo_format, int desired_width)
 {
 	float scale;
 
-	self->priv->surface = cairo_image_surface_create (cairo_format, width, height);
+	self->priv->surface = cairo_image_surface_create ( cairo_format, self->priv->buffer_width, self->priv->buffer_height);
 	self->priv->scaled_context = cairo_create (self->priv->surface);
 
-	scale = (desired_width + 1) / self->priv->width;
+	scale = (desired_width + 1) / self->priv->real_width;
 	cairo_scale (self->priv->scaled_context, scale, scale);
 	g_print ("%s\n",cairo_status_to_string (cairo_status (self->priv->scaled_context)));
 }
@@ -119,7 +118,7 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 		}
 		previous_width = desired_width;
 
-		hcv_image_overlay_create_surface (self, cairo_format, self->priv->buffer_width, self->priv->buffer_height, desired_width);
+		hcv_image_overlay_create_surface (self, self->priv->cairo_format, desired_width);
 
 		g_print ("Width changed========================================\n");
 	}
@@ -127,7 +126,7 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 	{
 		if (self->priv->scaled_context == NULL)
 		{
-			hcv_image_overlay_create_surface (self, cairo_format, self->priv->buffer_width, self->priv->buffer_height, desired_width);
+			hcv_image_overlay_create_surface (self, self->priv->cairo_format, desired_width);
 
 			g_print ("First creation of scaled_context========================================\n");
 		}
@@ -141,13 +140,13 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 		cairo_destroy (self->priv->scaled_context);
 		if (self->priv->surface != NULL)
 			cairo_surface_destroy (self->priv->surface);
-		hcv_image_overlay_create_surface (self, cairo_format, self->priv->buffer_width, self->priv->buffer_height, desired_width);
+		hcv_image_overlay_create_surface (self, self->priv->cairo_format, desired_width);
 	}
 	self->priv->recreate = 0;
 	g_static_mutex_unlock(&mutex);
 
 	surface = cairo_image_surface_create_for_data (GST_BUFFER_DATA (nbuf),
-			cairo_format,
+			self->priv->cairo_format,
 			self->priv->buffer_width,
 			self->priv->buffer_height,
 			stride);
@@ -195,7 +194,7 @@ hcv_image_overlay_define_image (HcvImageOverlay *self, GString *path)
 	if (self->priv->image != NULL)
 		cairo_surface_destroy(self->priv->image);
 	self->priv->image = cairo_image_surface_create_from_png (path->str);
-	self->priv->width = cairo_image_surface_get_width (self->priv->image);
+	self->priv->real_width = cairo_image_surface_get_width (self->priv->image);
 	self->priv->recreate = 1;
 	g_static_mutex_unlock(&mutex);
 }
@@ -465,6 +464,7 @@ hcv_image_overlay_init (HcvImageOverlay *trans, GstBaseTransformClass *klass G_G
 	trans->priv->right = 0;
 	trans->priv->top = 0;
 	trans->priv->bottom = 0;
+	trans->priv->real_width = 0;
 	trans->priv->scaled_context = NULL;
 	trans->priv->surface = NULL;
 	trans->priv->proportion = 1;
