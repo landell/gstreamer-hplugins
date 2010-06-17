@@ -91,13 +91,13 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 	cairo_t* cr;
 	cairo_surface_t* surface;
 	static int stride = -1;
-	static float previous_width = 0;
 
 	stride = cairo_format_stride_for_width (self->priv->cairo_format, self->priv->buffer_width);
 
 	if (self->priv->image_width > self->priv->buffer_width)
 		self->priv->image_width = self->priv->buffer_width;
-	if (previous_width != self->priv->image_width)
+	g_static_mutex_lock(&mutex);
+	if (self->priv->recreate)
 	{
 		/*If there was a scaled context, destroy it to create a new one*/
 		if (self->priv->scaled_context != NULL)
@@ -106,11 +106,11 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 			if (self->priv->surface != NULL)
 				cairo_surface_destroy (self->priv->surface);
 		}
-		previous_width = self->priv->image_width;
-
 		hcv_image_overlay_create_surface (self, self->priv->cairo_format);
 
 		g_print ("Width changed========================================\n");
+
+		self->priv->recreate = 0;
 	}
 	else
 	{
@@ -121,18 +121,9 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 			g_print ("First creation of scaled_context========================================\n");
 		}
 	}
-	g_static_mutex_lock(&mutex);
 	cairo_set_source_surface (self->priv->scaled_context, self->priv->image, 0, 0);
 	g_print ("%s\n",cairo_status_to_string (cairo_status (self->priv->scaled_context)));
 	cairo_paint (self->priv->scaled_context);
-	if (self->priv->recreate)
-	{
-		cairo_destroy (self->priv->scaled_context);
-		if (self->priv->surface != NULL)
-			cairo_surface_destroy (self->priv->surface);
-		hcv_image_overlay_create_surface (self, self->priv->cairo_format);
-	}
-	self->priv->recreate = 0;
 	g_static_mutex_unlock(&mutex);
 
 	surface = cairo_image_surface_create_for_data (GST_BUFFER_DATA (nbuf),
@@ -204,7 +195,10 @@ hcv_image_overlay_set_property (GObject      *object,
 			 break;
 
 		 case HCV_IMAGE_OVERLAY_WIDTH:
+			 g_static_mutex_lock(&mutex);
 			 self->priv->image_width = g_value_get_int (value);
+			 self->priv->recreate = 1;
+			 g_static_mutex_unlock(&mutex);
 			 g_print ("width: %d\n", self->priv->image_width);
 			 break;
 
