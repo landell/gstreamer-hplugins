@@ -151,7 +151,7 @@ hcv_image_overlay_transform_ip (GstBaseTransform *trans, GstBuffer *buf)
 }
 
 static GstElementDetails image_overlay_details =
-GST_ELEMENT_DETAILS ("HCV Image Overlay", "Filter/Editor/Video", "Put image in defined space",
+GST_ELEMENT_DETAILS ("HPlugins Cairo Image Overlay", "Filter/Editor/Video", "Put image in defined space",
 "Luciana Fujii Pontello <luciana@holoscopio.com>");
 
 static GstStaticPadTemplate srctemplate =
@@ -428,7 +428,7 @@ hcv_image_overlay_get_type (void)
 				NULL
       };
       type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
-                                     "HcvImageOverlayType", &info, 0);
+                                     "HPluginsCairoImageOverlayType", &info, 0);
     }
   return type;
 }

@@ -33,9 +33,9 @@ plugin_init (GstPlugin *plugin)
 }
 
 #ifndef PACKAGE
-#define PACKAGE "hcv"
+#define PACKAGE "hplugins"
 #endif
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, "hcv", "", \
-                   plugin_init, "0.1", "GPL", "gsthcv", \
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, "hplugins", "", \
+                   plugin_init, "0.1", "GPL", "gstcairoimageoverlay", \
                    "http://holoscopio.com");

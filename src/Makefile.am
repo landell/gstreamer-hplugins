@@ -1,10 +1,10 @@
-plugin_LTLIBRARIES = libgsthcv.la
+plugin_LTLIBRARIES = libgstcairoimageoverlay.la
 
 plugindir = $(libdir)/gstreamer-0.10/
 
-libgsthcv_la_SOURCES = gstreamer.c cairoimageoverlay.c
+libgstcairoimageoverlay_la_SOURCES = gstreamer.c cairoimageoverlay.c
 
-libgsthcv_la_CFLAGS = \
+libgstcairoimageoverlay_la_CFLAGS = \
 					  $(GSTREAMER_CFLAGS) \
 					  $(GSTREAMER_BASE_CFLAGS) \
 					  $(GST_PLUGINS_BASE_CFLAGS) \
@@ -12,7 +12,7 @@ libgsthcv_la_CFLAGS = \
 					  $(CAIRO_CFLAGS)
 
 
-libgsthcv_la_LIBADD = \
+libgstcairoimageoverlay_la_LIBADD = \
 					  $(GSTREAMER_LIBS) \
 					  $(GSTREAMER_BASE_LIBS) \
 					  $(GST_PLUGINS_BASE_LIBS) \
