@@ -18,3 +18,5 @@ libgstcairoimageoverlay_la_LIBADD = \
 					  $(GST_PLUGINS_BASE_LIBS) \
 					  $(GSTVIDEO_LIBS) \
 					  $(CAIRO_LIBS)
+
+libgstcairoimageoverlay_la_LDFLAGS = -module -avoid-version
