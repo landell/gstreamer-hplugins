@@ -297,12 +297,12 @@ hcv_image_overlay_setcaps (GstPad *pad, GstCaps *caps)
 	if (format == GST_VIDEO_FORMAT_ARGB || format == GST_VIDEO_FORMAT_BGRA)
 	{
 		self->priv->cairo_format = CAIRO_FORMAT_ARGB32;
-		g_print ("Formato é ARGB32\n");
+		g_print ("The format is ARGB32\n");
 	}
 	else
 	{
 		self->priv->cairo_format = CAIRO_FORMAT_RGB24;
-		g_print ("Fomato é RGB24\n");
+		g_print ("The format is RGB24\n");
 	}
 	if (!gst_pad_set_caps (GST_BASE_TRANSFORM_SRC_PAD(self), caps))
 		return FALSE;
