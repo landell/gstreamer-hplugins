@@ -94,6 +94,7 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 	cairo_t* cr;
 	cairo_surface_t* surface;
 	static int stride = -1;
+	float alpha;
 
 	stride = cairo_format_stride_for_width (self->priv->cairo_format, self->priv->buffer_width);
 
@@ -139,7 +140,11 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 			self->priv->y, self->priv->image_width);
 
 	cairo_set_source_surface (cr, self->priv->surface, self->priv->x, self->priv->y);
-	cairo_paint_with_alpha (cr, self->priv->alpha_value);
+
+	g_static_mutex_lock(&mutex);
+	alpha = self->priv->alpha_value;
+	g_static_mutex_unlock(&mutex);
+	cairo_paint_with_alpha (cr, alpha);
 
 	cairo_destroy (cr);
 	gst_buffer_unref (nbuf);
@@ -216,7 +221,9 @@ hcv_image_overlay_set_property (GObject      *object,
 			 break;
 
 		 case HCV_IMAGE_OVERLAY_ALPHA:
+			 g_static_mutex_lock(&mutex);
 			 self->priv->alpha_value = g_value_get_float (value);
+			 g_static_mutex_unlock(&mutex);
 			 GST_DEBUG_OBJECT (object, "Property image-alpha set to: %f\n",
 					 self->priv->alpha_value);
 			 break;
@@ -387,7 +394,7 @@ hcv_image_overlay_class_init (GstBaseTransformClass *klass)
 			0 /* minimum value */,
 			1 /* maximum value */,
 			1,  /* default value */
-			G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+			G_PARAM_READWRITE);
 	g_object_class_install_property (gobject_class,
 			HCV_IMAGE_OVERLAY_ALPHA,
 			pspec);
