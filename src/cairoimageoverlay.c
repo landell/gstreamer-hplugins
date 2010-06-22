@@ -37,6 +37,8 @@ typedef struct _HcvImageOverlay HcvImageOverlay;
 
 static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
 
+GST_DEBUG_CATEGORY (cairo_image_overlay_debug);
+
 enum
 {
 	PROP_0,
@@ -81,7 +83,8 @@ static void hcv_image_overlay_create_surface (HcvImageOverlay *self, cairo_forma
 
 	scale = (self->priv->image_width + 1) / self->priv->real_width;
 	cairo_scale (self->priv->scaled_context, scale, scale);
-	g_print ("%s\n",cairo_status_to_string (cairo_status (self->priv->scaled_context)));
+	GST_DEBUG_OBJECT (self, "Status of cairo create surface: %s\n",
+			cairo_status_to_string (cairo_status (self->priv->scaled_context)));
 }
 
 static gboolean
@@ -99,6 +102,7 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 	g_static_mutex_lock(&mutex);
 	if (self->priv->recreate)
 	{
+		GST_DEBUG_OBJECT (self, "Recreate flag was set\n");
 		/*If there was a scaled context, destroy it to create a new one*/
 		if (self->priv->scaled_context != NULL)
 		{
@@ -108,8 +112,6 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 		}
 		hcv_image_overlay_create_surface (self, self->priv->cairo_format);
 
-		g_print ("Width changed========================================\n");
-
 		self->priv->recreate = 0;
 	}
 	else
@@ -118,11 +120,12 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 		{
 			hcv_image_overlay_create_surface (self, self->priv->cairo_format);
 
-			g_print ("First creation of scaled_context========================================\n");
+			GST_DEBUG_OBJECT (self, "Cairo surface created\n");
 		}
 	}
 	cairo_set_source_surface (self->priv->scaled_context, self->priv->image, 0, 0);
-	g_print ("%s\n",cairo_status_to_string (cairo_status (self->priv->scaled_context)));
+	GST_DEBUG_OBJECT (self, "Status of cairo_set_source_surface: %s\n",
+			cairo_status_to_string (cairo_status (self->priv->scaled_context)));
 	cairo_paint (self->priv->scaled_context);
 	g_static_mutex_unlock(&mutex);
 
@@ -132,7 +135,8 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 			self->priv->buffer_height,
 			stride);
 	cr = cairo_create (surface);
-	g_print ("X: %d, Y: %d - %d\n", self->priv->x, self->priv->y, self->priv->image_width);
+	GST_DEBUG_OBJECT (self, "X: %d, Y: %d, width: %d\n", self->priv->x,
+			self->priv->y, self->priv->image_width);
 
 	cairo_set_source_surface (cr, self->priv->surface, self->priv->x, self->priv->y);
 	cairo_paint_with_alpha (cr, self->priv->alpha_value);
@@ -186,12 +190,13 @@ hcv_image_overlay_set_property (GObject      *object,
 	 {
 		 case HCV_IMAGE_OVERLAY_X:
 			 self->priv->x = g_value_get_int (value);
-			 g_print ("x: %d\n", self->priv->x);
+			 GST_DEBUG_OBJECT (object, "Property x set to %d\n", self->priv->x);
 			 break;
 
 		 case HCV_IMAGE_OVERLAY_Y:
 			 self->priv->y = g_value_get_int (value);
-			 g_print ("y: %d\n", self->priv->y);
+			 GST_DEBUG_OBJECT (object, "Property y set to: %d\n",
+					 self->priv->y);
 			 break;
 
 		 case HCV_IMAGE_OVERLAY_WIDTH:
@@ -199,18 +204,21 @@ hcv_image_overlay_set_property (GObject      *object,
 			 self->priv->image_width = g_value_get_int (value);
 			 self->priv->recreate = 1;
 			 g_static_mutex_unlock(&mutex);
-			 g_print ("width: %d\n", self->priv->image_width);
+			 GST_DEBUG_OBJECT (object, "Property image-width set to: %d\n",
+					 self->priv->image_width);
 			 break;
 
 		 case HCV_IMAGE_OVERLAY_IMAGE:
 			 self->priv->img_path = g_string_new (g_value_get_string (value));
 			 hcv_image_overlay_define_image(self, self->priv->img_path);
-			 g_print ("image: %s\n", self->priv->img_path->str);
+			 GST_DEBUG_OBJECT (object, "Property location set to : %s\n",
+					 self->priv->img_path->str);
 			 break;
 
 		 case HCV_IMAGE_OVERLAY_ALPHA:
 			 self->priv->alpha_value = g_value_get_float (value);
-			 g_print ("alpha value: %f\n", self->priv->alpha_value);
+			 GST_DEBUG_OBJECT (object, "Property image-alpha set to: %f\n",
+					 self->priv->alpha_value);
 			 break;
 
 		 default:
@@ -253,22 +261,18 @@ hcv_image_overlay_get_property (GObject      *object,
 	 {
 		 case HCV_IMAGE_OVERLAY_X:
 			 g_value_set_int (value, self->priv->x);
-			 g_print ("x: %d\n", self->priv->x);
 			 break;
 
 		 case HCV_IMAGE_OVERLAY_Y:
 			 g_value_set_int (value, self->priv->y);
-			 g_print ("y: %d\n", self->priv->y);
 			 break;
 
 		 case HCV_IMAGE_OVERLAY_WIDTH:
 			 g_value_set_int (value, self->priv->image_width);
-			 g_print ("image_width: %d\n", self->priv->image_width);
 			 break;
 
 		 case HCV_IMAGE_OVERLAY_ALPHA:
 			 g_value_set_float (value, self->priv->alpha_value);
-			 g_print ("alpha value: %f\n", self->priv->alpha_value);
 			 break;
 
 		 default:
@@ -288,7 +292,7 @@ hcv_image_overlay_setcaps (GstPad *pad, GstCaps *caps)
 
 	if (!gst_video_format_parse_caps (caps, &format, &width, &height))
 	{
-		g_warning ("Could not parse caps");
+		GST_WARNING_OBJECT (self, "Could not parse caps");
 		return FALSE;
 	}
 	self->priv->buffer_width = width;
@@ -297,12 +301,12 @@ hcv_image_overlay_setcaps (GstPad *pad, GstCaps *caps)
 	if (format == GST_VIDEO_FORMAT_ARGB || format == GST_VIDEO_FORMAT_BGRA)
 	{
 		self->priv->cairo_format = CAIRO_FORMAT_ARGB32;
-		g_print ("The format is ARGB32\n");
+		GST_DEBUG_OBJECT (self, "Caps format set to ARGB32\n");
 	}
 	else
 	{
 		self->priv->cairo_format = CAIRO_FORMAT_RGB24;
-		g_print ("The format is RGB24\n");
+		GST_DEBUG_OBJECT (self, "Caps format set to RGB24\n");
 	}
 	if (!gst_pad_set_caps (GST_BASE_TRANSFORM_SRC_PAD(self), caps))
 		return FALSE;
@@ -334,7 +338,7 @@ hcv_image_overlay_class_init (GstBaseTransformClass *klass)
 	GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 	GParamSpec *pspec;
 
-	klass->transform_ip = hcv_image_overlay_transform_ip;
+	klass->transform_ip = GST_DEBUG_FUNCPTR(hcv_image_overlay_transform_ip);
 	gst_element_class_set_details (GST_ELEMENT_CLASS (klass), &image_overlay_details);
 
 	gobject_class->set_property = hcv_image_overlay_set_property;
@@ -393,7 +397,8 @@ static void
 hcv_image_overlay_init (HcvImageOverlay *trans, GstBaseTransformClass *klass G_GNUC_UNUSED)
 {
 	GstPad *sink_pad;
-	g_print("INIT\n");
+
+	GST_DEBUG_OBJECT(trans, "INIT\n");
 	trans->priv = (HcvImageOverlayPriv *) malloc (sizeof (HcvImageOverlayPriv));
 	trans->priv->x = 0;
 	trans->priv->y = 0;
@@ -404,6 +409,9 @@ hcv_image_overlay_init (HcvImageOverlay *trans, GstBaseTransformClass *klass G_G
 	trans->priv->alpha_value = 1;
 	trans->priv->image = NULL;
 	trans->priv->img_path = NULL;
+
+	GST_DEBUG_CATEGORY_INIT (cairo_image_overlay_debug, "cairoimageoverlay", 0,
+			"cairoimageoverlay element");
 
 	sink_pad = GST_BASE_TRANSFORM_SINK_PAD(trans);
 	gst_pad_set_setcaps_function (sink_pad, hcv_image_overlay_setcaps);
