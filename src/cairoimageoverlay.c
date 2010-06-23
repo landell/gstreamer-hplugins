@@ -146,6 +146,7 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 	g_static_mutex_unlock(&mutex);
 	cairo_paint_with_alpha (cr, alpha);
 
+	cairo_surface_destroy(surface);
 	cairo_destroy (cr);
 	gst_buffer_unref (nbuf);
 	return TRUE;
@@ -177,7 +178,8 @@ hcv_image_overlay_define_image (HcvImageOverlay *self, GString *path)
 	g_static_mutex_lock(&mutex);
 	if (self->priv->image != NULL)
 		cairo_surface_destroy(self->priv->image);
-	self->priv->image = cairo_image_surface_create_from_png (path->str);
+	if (path != NULL)
+		self->priv->image = cairo_image_surface_create_from_png (path->str);
 	self->priv->real_width = cairo_image_surface_get_width (self->priv->image);
 	self->priv->recreate = 1;
 	g_static_mutex_unlock(&mutex);
@@ -214,6 +216,8 @@ hcv_image_overlay_set_property (GObject      *object,
 			 break;
 
 		 case HCV_IMAGE_OVERLAY_IMAGE:
+			 if (self->priv->img_path)
+				 g_string_free(self->priv->img_path, TRUE);
 			 self->priv->img_path = g_string_new (g_value_get_string (value));
 			 hcv_image_overlay_define_image(self, self->priv->img_path);
 			 GST_DEBUG_OBJECT (object, "Property location set to : %s\n",
@@ -253,6 +257,16 @@ hcv_image_overlay_dispose (GObject *object)
 	{
 		cairo_surface_destroy (self->priv->surface);
 		self->priv->surface = NULL;
+	}
+	if (self->priv->img_path)
+	{
+		g_string_free(self->priv->img_path, TRUE);
+		self->priv->img_path = NULL;
+	}
+	if (self->priv)
+	{
+		g_free(self->priv);
+		self->priv = NULL;
 	}
 }
 
