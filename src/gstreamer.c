@@ -37,5 +37,5 @@ plugin_init (GstPlugin *plugin)
 #endif
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, "hplugins", "", \
-                   plugin_init, "0.1", "GPL", "gstcairoimageoverlay", \
+                   plugin_init, "0.1.1", "GPL", "gstcairoimageoverlay", \
                    "http://holoscopio.com");
