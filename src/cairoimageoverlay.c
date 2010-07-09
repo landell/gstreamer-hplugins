@@ -77,12 +77,15 @@ struct _HcvImageOverlay
 	HcvImageOverlayPriv *priv;
 };
 
-static void hcv_image_overlay_create_surface (HcvImageOverlay *self, cairo_format_t cairo_format)
+static void
+hcv_image_overlay_create_surface (HcvImageOverlay *self,
+		cairo_format_t cairo_format)
 {
 	float width_scale;
 	float height_scale;
 
-	self->priv->surface = cairo_image_surface_create ( cairo_format, self->priv->buffer_width, self->priv->buffer_height);
+	self->priv->surface = cairo_image_surface_create ( cairo_format,
+			self->priv->buffer_width, self->priv->buffer_height);
 	self->priv->scaled_context = cairo_create (self->priv->surface);
 
 	width_scale = (self->priv->image_width + 1) / self->priv->real_width;
@@ -101,7 +104,8 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 	static int stride = -1;
 	float alpha;
 
-	stride = cairo_format_stride_for_width (self->priv->cairo_format, self->priv->buffer_width);
+	stride = cairo_format_stride_for_width (self->priv->cairo_format,
+			self->priv->buffer_width);
 
 	if (self->priv->image_width > self->priv->buffer_width)
 		self->priv->image_width = self->priv->buffer_width;
@@ -131,7 +135,8 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 			GST_DEBUG_OBJECT (self, "Cairo surface created\n");
 		}
 	}
-	cairo_set_source_surface (self->priv->scaled_context, self->priv->image, 0, 0);
+	cairo_set_source_surface (self->priv->scaled_context,
+			self->priv->image, 0, 0);
 	GST_DEBUG_OBJECT (self, "Status of cairo_set_source_surface: %s\n",
 			cairo_status_to_string (cairo_status (self->priv->scaled_context)));
 	cairo_paint (self->priv->scaled_context);
@@ -146,7 +151,8 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 	GST_DEBUG_OBJECT (self, "X: %d, Y: %d, width: %d\n", self->priv->x,
 			self->priv->y, self->priv->image_width);
 
-	cairo_set_source_surface (cr, self->priv->surface, self->priv->x, self->priv->y);
+	cairo_set_source_surface (cr, self->priv->surface, self->priv->x,
+			self->priv->y);
 
 	g_static_mutex_lock(&mutex);
 	alpha = self->priv->alpha_value;
@@ -168,8 +174,9 @@ hcv_image_overlay_transform_ip (GstBaseTransform *trans, GstBuffer *buf)
 }
 
 static GstElementDetails image_overlay_details =
-GST_ELEMENT_DETAILS ("HPlugins Cairo Image Overlay", "Filter/Editor/Video", "Put image in defined space",
-"Luciana Fujii Pontello <luciana@holoscopio.com>");
+GST_ELEMENT_DETAILS ("HPlugins Cairo Image Overlay",
+		"Filter/Editor/Video", "Put image in defined space",
+		"Luciana Fujii Pontello <luciana@holoscopio.com>");
 
 static GstStaticPadTemplate srctemplate =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
@@ -177,7 +184,7 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
 
 static GstStaticPadTemplate sinktemplate =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-                         GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA));
+		GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA));
 
 static void
 hcv_image_overlay_define_image (HcvImageOverlay *self, GString *path)
@@ -381,7 +388,8 @@ hcv_image_overlay_class_init (GstBaseTransformClass *klass)
 	GParamSpec *pspec;
 
 	klass->transform_ip = GST_DEBUG_FUNCPTR(hcv_image_overlay_transform_ip);
-	gst_element_class_set_details (GST_ELEMENT_CLASS (klass), &image_overlay_details);
+	gst_element_class_set_details (GST_ELEMENT_CLASS (klass),
+			&image_overlay_details);
 
 	gobject_class->set_property = hcv_image_overlay_set_property;
 	gobject_class->get_property = hcv_image_overlay_get_property;
@@ -445,7 +453,8 @@ hcv_image_overlay_class_init (GstBaseTransformClass *klass)
 }
 
 static void
-hcv_image_overlay_init (HcvImageOverlay *trans, GstBaseTransformClass *klass G_GNUC_UNUSED)
+hcv_image_overlay_init (HcvImageOverlay *trans,
+		GstBaseTransformClass *klass G_GNUC_UNUSED)
 {
 	GstPad *sink_pad;
 
