@@ -81,15 +81,17 @@ static void
 hcv_image_overlay_create_surface (HcvImageOverlay *self,
 		cairo_format_t cairo_format)
 {
-	float width_scale;
-	float height_scale;
+	float width_scale = 1;
+	float height_scale = 1;
 
 	self->priv->surface = cairo_image_surface_create ( cairo_format,
 			self->priv->buffer_width, self->priv->buffer_height);
 	self->priv->scaled_context = cairo_create (self->priv->surface);
 
-	width_scale = (self->priv->image_width + 1) / self->priv->real_width;
-	height_scale = (self->priv->image_height + 1) / self->priv->real_height;
+	if (self->priv->image_width != -1)
+		width_scale = (self->priv->image_width + 1) / self->priv->real_width;
+	if (self->priv->image_height != -1)
+		height_scale = (self->priv->image_height + 1) / self->priv->real_height;
 	cairo_scale (self->priv->scaled_context, width_scale, height_scale);
 	GST_DEBUG_OBJECT (self, "Status of cairo create surface: %s\n",
 			cairo_status_to_string (cairo_status (self->priv->scaled_context)));
@@ -416,19 +418,19 @@ hcv_image_overlay_class_init (GstBaseTransformClass *klass)
 			HCV_IMAGE_OVERLAY_Y, pspec);
 	pspec = g_param_spec_int ("image_width",
 			"Width to be set for image",
-			"Set/Get image width",
-			0  /* minimum value */,
+			"Set/Get image width. Value -1 keeps the original size.",
+			-1  /* minimum value */,
 			G_MAXINT /* maximum value */,
-			2  /* default value */,
+			-1  /* default value */,
 			G_PARAM_READWRITE);
 	g_object_class_install_property (gobject_class,
 			HCV_IMAGE_OVERLAY_WIDTH, pspec);
 	pspec = g_param_spec_int ("image_height",
 			"Height to be set for image",
-			"Set/Get image height",
-			0  /* minimum value */,
+			"Set/Get image height. Value -1 keeps the original size.",
+			-1  /* minimum value */,
 			G_MAXINT /* maximum value */,
-			2  /* default value */,
+			-1  /* default value */,
 			G_PARAM_READWRITE);
 	g_object_class_install_property (gobject_class,
 			HCV_IMAGE_OVERLAY_HEIGHT, pspec);
@@ -462,8 +464,8 @@ hcv_image_overlay_init (HcvImageOverlay *trans,
 	trans->priv = (HcvImageOverlayPriv *) malloc (sizeof (HcvImageOverlayPriv));
 	trans->priv->x = 0;
 	trans->priv->y = 0;
-	trans->priv->image_width = 0;
-	trans->priv->image_height = 0;
+	trans->priv->image_width = -1;
+	trans->priv->image_height = -1;
 	trans->priv->real_width = 0;
 	trans->priv->scaled_context = NULL;
 	trans->priv->surface = NULL;
