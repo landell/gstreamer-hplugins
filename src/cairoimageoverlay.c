@@ -46,6 +46,7 @@ enum
 	HCV_IMAGE_OVERLAY_X,
 	HCV_IMAGE_OVERLAY_Y,
 	HCV_IMAGE_OVERLAY_WIDTH,
+	HCV_IMAGE_OVERLAY_HEIGHT,
 	HCV_IMAGE_OVERLAY_IMAGE,
 	HCV_IMAGE_OVERLAY_ALPHA
 };
@@ -55,6 +56,7 @@ struct _HcvImageOverlayPriv
 	int x;
 	int y;
 	int image_width;
+	int image_height;
 	int recreate;
 	GString *img_path;
 	float alpha_value;
@@ -62,6 +64,7 @@ struct _HcvImageOverlayPriv
 	cairo_t *scaled_context;
 	cairo_surface_t *surface;
 	float real_width;
+	float real_height;
 	cairo_format_t cairo_format;
 	int buffer_width;
 	int buffer_height;
@@ -76,13 +79,15 @@ struct _HcvImageOverlay
 
 static void hcv_image_overlay_create_surface (HcvImageOverlay *self, cairo_format_t cairo_format)
 {
-	float scale;
+	float width_scale;
+	float height_scale;
 
 	self->priv->surface = cairo_image_surface_create ( cairo_format, self->priv->buffer_width, self->priv->buffer_height);
 	self->priv->scaled_context = cairo_create (self->priv->surface);
 
-	scale = (self->priv->image_width + 1) / self->priv->real_width;
-	cairo_scale (self->priv->scaled_context, scale, scale);
+	width_scale = (self->priv->image_width + 1) / self->priv->real_width;
+	height_scale = (self->priv->image_height + 1) / self->priv->real_height;
+	cairo_scale (self->priv->scaled_context, width_scale, height_scale);
 	GST_DEBUG_OBJECT (self, "Status of cairo create surface: %s\n",
 			cairo_status_to_string (cairo_status (self->priv->scaled_context)));
 }
@@ -100,6 +105,8 @@ hcv_buffer_image_overlay (HcvImageOverlay *self, GstBuffer *gbuf)
 
 	if (self->priv->image_width > self->priv->buffer_width)
 		self->priv->image_width = self->priv->buffer_width;
+	if (self->priv->image_height > self->priv->buffer_height)
+		self->priv->image_height = self->priv->buffer_height;
 	g_static_mutex_lock(&mutex);
 	if (self->priv->recreate)
 	{
@@ -181,6 +188,7 @@ hcv_image_overlay_define_image (HcvImageOverlay *self, GString *path)
 	if (path != NULL)
 		self->priv->image = cairo_image_surface_create_from_png (path->str);
 	self->priv->real_width = cairo_image_surface_get_width (self->priv->image);
+	self->priv->real_height = cairo_image_surface_get_height (self->priv->image);
 	self->priv->recreate = 1;
 	g_static_mutex_unlock(&mutex);
 }
@@ -213,6 +221,15 @@ hcv_image_overlay_set_property (GObject      *object,
 			 g_static_mutex_unlock(&mutex);
 			 GST_DEBUG_OBJECT (object, "Property image-width set to: %d\n",
 					 self->priv->image_width);
+			 break;
+
+		 case HCV_IMAGE_OVERLAY_HEIGHT:
+			 g_static_mutex_lock(&mutex);
+			 self->priv->image_height = g_value_get_int (value);
+			 self->priv->recreate = 1;
+			 g_static_mutex_unlock(&mutex);
+			 GST_DEBUG_OBJECT (object, "Property image-height set to: %d\n",
+					 self->priv->image_height);
 			 break;
 
 		 case HCV_IMAGE_OVERLAY_IMAGE:
@@ -290,6 +307,10 @@ hcv_image_overlay_get_property (GObject      *object,
 
 		 case HCV_IMAGE_OVERLAY_WIDTH:
 			 g_value_set_int (value, self->priv->image_width);
+			 break;
+
+		 case HCV_IMAGE_OVERLAY_HEIGHT:
+			 g_value_set_int (value, self->priv->image_height);
 			 break;
 
 		 case HCV_IMAGE_OVERLAY_ALPHA:
@@ -394,6 +415,15 @@ hcv_image_overlay_class_init (GstBaseTransformClass *klass)
 			G_PARAM_READWRITE);
 	g_object_class_install_property (gobject_class,
 			HCV_IMAGE_OVERLAY_WIDTH, pspec);
+	pspec = g_param_spec_int ("image_height",
+			"Height to be set for image",
+			"Set/Get image height",
+			0  /* minimum value */,
+			G_MAXINT /* maximum value */,
+			2  /* default value */,
+			G_PARAM_READWRITE);
+	g_object_class_install_property (gobject_class,
+			HCV_IMAGE_OVERLAY_HEIGHT, pspec);
 	pspec = g_param_spec_string ("location",
 			"png image to be used",
 			"Set png image filename",
@@ -424,6 +454,7 @@ hcv_image_overlay_init (HcvImageOverlay *trans, GstBaseTransformClass *klass G_G
 	trans->priv->x = 0;
 	trans->priv->y = 0;
 	trans->priv->image_width = 0;
+	trans->priv->image_height = 0;
 	trans->priv->real_width = 0;
 	trans->priv->scaled_context = NULL;
 	trans->priv->surface = NULL;
