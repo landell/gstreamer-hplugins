@@ -68,6 +68,22 @@ hc_live_keeper_class_init (HcLiveKeeperClass *kclass)
   GObjectClass *oclass = G_OBJECT_CLASS (kclass);
 }
 
+static GstStaticPadTemplate sink_template =
+GST_STATIC_PAD_TEMPLATE (
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS ("video/x-raw-rgb; video/x-raw-yuv")
+);
+
+static GstStaticPadTemplate src_template =
+GST_STATIC_PAD_TEMPLATE (
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS ("video/x-raw-rgb; video/x-raw-yuv")
+);
+
 static void
 hc_live_keeper_base_init (HcLiveKeeperClass *kclass)
 {
@@ -75,4 +91,8 @@ hc_live_keeper_base_init (HcLiveKeeperClass *kclass)
   gst_element_class_set_details_simple (eclass, "livekeeper",
         "Live Keeper", "keep streams live",
         "Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>");
+  gst_element_class_add_pad_template (eclass,
+    gst_static_pad_template_get (&src_template));
+  gst_element_class_add_pad_template (eclass,
+    gst_static_pad_template_get (&sink_template));
 }
