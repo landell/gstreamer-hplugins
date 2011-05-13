@@ -2,7 +2,10 @@ plugin_LTLIBRARIES = libgstcairoimageoverlay.la
 
 plugindir = $(libdir)/gstreamer-0.10/
 
-libgstcairoimageoverlay_la_SOURCES = gstreamer.c cairoimageoverlay.c
+libgstcairoimageoverlay_la_SOURCES = \
+	gstreamer.c \
+	cairoimageoverlay.c \
+	livekeeper.c
 
 libgstcairoimageoverlay_la_CFLAGS = \
 					  $(GSTREAMER_CFLAGS) \
