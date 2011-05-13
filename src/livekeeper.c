@@ -30,8 +30,32 @@ struct _HcLiveKeeperPrivate
 
 static void hc_live_keeper_init (HcLiveKeeper *);
 static void hc_live_keeper_class_init (HcLiveKeeperClass *);
+static void hc_live_keeper_base_init (HcLiveKeeperClass *);
 
-G_DEFINE_TYPE (HcLiveKeeper, hc_live_keeper, GST_TYPE_ELEMENT);
+GType
+hc_live_keeper_get_type (void)
+{
+  static GType type = 0;
+  if (type == 0)
+    {
+      const GTypeInfo info =
+        {
+          sizeof (HcLiveKeeperClass),
+          (GBaseInitFunc) hc_live_keeper_base_init,
+          NULL, /* hc_live_keeper_base_finalize, */
+          (GClassInitFunc) hc_live_keeper_class_init,
+          NULL, /* hc_live_keeper_class_finalize, */
+          NULL, /* class_data */
+          sizeof (HcLiveKeeper),
+          0,
+          (GInstanceInitFunc) hc_live_keeper_init,
+        };
+      type = g_type_register_static (GST_TYPE_ELEMENT,
+                                     "HcLiveKeeper",
+                                     &info, 0);
+    }
+  return type;
+}
 
 static void
 hc_live_keeper_init (HcLiveKeeper *keeper)
@@ -42,4 +66,13 @@ static void
 hc_live_keeper_class_init (HcLiveKeeperClass *kclass)
 {
   GObjectClass *oclass = G_OBJECT_CLASS (kclass);
+}
+
+static void
+hc_live_keeper_base_init (HcLiveKeeperClass *kclass)
+{
+  GstElementClass *eclass = GST_ELEMENT_CLASS (kclass);
+  gst_element_class_set_details_simple (eclass, "livekeeper",
+        "Live Keeper", "keep streams live",
+        "Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>");
 }
