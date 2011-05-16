@@ -28,7 +28,9 @@ struct _HcLiveKeeperPrivate
   int timeout;
 };
 
-static void hc_live_keeper_init (HcLiveKeeper *);
+static GObjectClass *parent_class;
+static void hc_live_keeper_init (HcLiveKeeper *, HcLiveKeeperClass *);
+static void hc_live_keeper_finalize (HcLiveKeeper *);
 static void hc_live_keeper_class_init (HcLiveKeeperClass *);
 static void hc_live_keeper_base_init (HcLiveKeeperClass *);
 
@@ -58,14 +60,71 @@ hc_live_keeper_get_type (void)
 }
 
 static void
-hc_live_keeper_init (HcLiveKeeper *keeper)
+hc_live_keeper_loop (HcLiveKeeper *keeper)
 {
+  GstBuffer *buf = NULL;
+  buf = g_async_queue_try_pop (keeper->queue);
+  if (buf)
+    {
+      if (keeper->lastbuf)
+        gst_buffer_unref (keeper->lastbuf);
+      keeper->lastbuf = gst_buffer_ref (buf);
+      gst_pad_push (keeper->srcpad, buf);
+    }
+  else if (keeper->lastbuf)
+    {
+      gst_pad_push (keeper->srcpad, keeper->lastbuf);
+    }
+  gst_pad_pause_task (keeper->sinkpad);
+}
+
+static GstFlowReturn
+hc_live_keeper_chain (GstPad *pad, GstBuffer *buf)
+{
+  HcLiveKeeper *keeper = HC_LIVE_KEEPER (GST_OBJECT_PARENT (pad));
+  gst_pad_start_task (pad,
+                      (GstTaskFunction) hc_live_keeper_loop,
+                      keeper);
+  g_async_queue_push (keeper->queue, buf);
+}
+
+static void
+hc_live_keeper_init (HcLiveKeeper *keeper, HcLiveKeeperClass *kclass)
+{
+
+  GstElementClass *eclass = GST_ELEMENT_CLASS (kclass);
+  GstPadTemplate *src_tmpl;
+  GstPadTemplate *sink_tmpl;
+
+  keeper->queue = g_async_queue_new_full ((GDestroyNotify) gst_buffer_unref);
+
+  src_tmpl = gst_element_class_get_pad_template (eclass, "src");
+  sink_tmpl = gst_element_class_get_pad_template (eclass, "sink");
+  keeper->srcpad = gst_pad_new_from_template (src_tmpl, "src");
+  keeper->sinkpad = gst_pad_new_from_template (sink_tmpl, "sink");
+
+  gst_pad_set_chain_function (keeper->sinkpad, hc_live_keeper_chain);
+
+  gst_element_add_pad (GST_ELEMENT (keeper), keeper->srcpad);
+  gst_element_add_pad (GST_ELEMENT (keeper), keeper->sinkpad);
+
+}
+
+static void
+hc_live_keeper_finalize (HcLiveKeeper *keeper)
+{
+  if (keeper->lastbuf)
+    gst_buffer_unref (keeper->lastbuf);
+  g_async_queue_unref (keeper->queue);
+  G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (keeper));
 }
 
 static void
 hc_live_keeper_class_init (HcLiveKeeperClass *kclass)
 {
   GObjectClass *oclass = G_OBJECT_CLASS (kclass);
+  parent_class = g_type_class_peek_parent (kclass);
+  oclass->finalize = (GObjectFinalizeFunc) hc_live_keeper_finalize;
 }
 
 static GstStaticPadTemplate sink_template =

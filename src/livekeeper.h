@@ -34,6 +34,10 @@ typedef struct _HcLiveKeeperClass HcLiveKeeperClass;
 struct _HcLiveKeeper
 {
   GstElement parent;
+  GstPad *srcpad;
+  GstPad *sinkpad;
+  GAsyncQueue *queue;
+  GstBuffer *lastbuf;
 };
 
 struct _HcLiveKeeperClass
