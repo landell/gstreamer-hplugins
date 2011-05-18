@@ -87,6 +87,20 @@ hc_live_keeper_chain (GstPad *pad, GstBuffer *buf)
   g_async_queue_push (keeper->queue, buf);
 }
 
+static gboolean
+hc_live_keeper_event (GstPad *pad, GstEvent *event)
+{
+  HcLiveKeeper *keeper = HC_LIVE_KEEPER (GST_OBJECT_PARENT (pad));
+  switch (GST_EVENT_TYPE (event))
+    {
+      case GST_EVENT_EOS:
+        gst_event_unref (event);
+        return TRUE;
+      default:
+        return gst_pad_push_event (keeper->srcpad, event);
+    }
+}
+
 static void
 hc_live_keeper_init (HcLiveKeeper *keeper, HcLiveKeeperClass *kclass)
 {
@@ -103,6 +117,7 @@ hc_live_keeper_init (HcLiveKeeper *keeper, HcLiveKeeperClass *kclass)
   keeper->sinkpad = gst_pad_new_from_template (sink_tmpl, "sink");
 
   gst_pad_set_chain_function (keeper->sinkpad, hc_live_keeper_chain);
+  gst_pad_set_event_function (keeper->sinkpad, hc_live_keeper_event);
 
   gst_element_add_pad (GST_ELEMENT (keeper), keeper->srcpad);
   gst_element_add_pad (GST_ELEMENT (keeper), keeper->sinkpad);
