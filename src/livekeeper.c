@@ -75,14 +75,13 @@ hc_live_keeper_loop (HcLiveKeeper *keeper)
     {
       gst_pad_push (keeper->srcpad, keeper->lastbuf);
     }
-  gst_pad_pause_task (keeper->sinkpad);
 }
 
 static GstFlowReturn
 hc_live_keeper_chain (GstPad *pad, GstBuffer *buf)
 {
   HcLiveKeeper *keeper = HC_LIVE_KEEPER (GST_OBJECT_PARENT (pad));
-  gst_pad_start_task (pad,
+  gst_pad_start_task (keeper->srcpad,
                       (GstTaskFunction) hc_live_keeper_loop,
                       keeper);
   g_async_queue_push (keeper->queue, buf);
@@ -116,6 +115,7 @@ hc_live_keeper_finalize (HcLiveKeeper *keeper)
   if (keeper->lastbuf)
     gst_buffer_unref (keeper->lastbuf);
   g_async_queue_unref (keeper->queue);
+  gst_pad_stop_task (keeper->srcpad);
   G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (keeper));
 }
 
