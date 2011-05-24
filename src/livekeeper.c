@@ -60,8 +60,9 @@ hc_live_keeper_get_type (void)
 }
 
 static void
-hc_live_keeper_loop (HcLiveKeeper *keeper)
+hc_live_keeper_loop (GstPad *pad)
 {
+  HcLiveKeeper *keeper = HC_LIVE_KEEPER (GST_OBJECT_PARENT (pad));
   GstBuffer *buf = NULL;
   buf = g_async_queue_try_pop (keeper->queue);
   if (buf)
