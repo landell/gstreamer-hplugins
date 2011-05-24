@@ -84,7 +84,11 @@ hc_live_keeper_loop (GstPad *pad)
     }
   else if (keeper->lastbuf)
     {
-      gst_pad_push (keeper->srcpad, keeper->lastbuf);
+      buf = gst_buffer_ref (keeper->lastbuf);
+      buf = gst_buffer_make_metadata_writable (buf);
+      GST_BUFFER_TIMESTAMP (buf) += GST_BUFFER_DURATION (buf);
+      gst_buffer_replace (&keeper->lastbuf, buf);
+      gst_pad_push (keeper->srcpad, buf);
     }
 }
 
