@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.65])
-AC_INIT(Gstreamer HPlugins, 0.1.2, luciana@holoscopio.com)
+AC_INIT(Gstreamer HPlugins, 0.2.0, cascardo@holoscopio.com)
 AM_INIT_AUTOMAKE,
 AC_REVISION([$Revision: 0.1.2 $])
 AC_CONFIG_SRCDIR([src/cairoimageoverlay.c])
