@@ -66,9 +66,7 @@ hc_live_keeper_loop (HcLiveKeeper *keeper)
   buf = g_async_queue_try_pop (keeper->queue);
   if (buf)
     {
-      if (keeper->lastbuf)
-        gst_buffer_unref (keeper->lastbuf);
-      keeper->lastbuf = gst_buffer_ref (buf);
+      gst_buffer_replace (&keeper->lastbuf, buf);
       gst_pad_push (keeper->srcpad, buf);
     }
   else if (keeper->lastbuf)
@@ -121,6 +119,7 @@ hc_live_keeper_init (HcLiveKeeper *keeper, HcLiveKeeperClass *kclass)
   GstPadTemplate *src_tmpl;
   GstPadTemplate *sink_tmpl;
 
+  keeper->lastbuf = NULL;
   keeper->queue = g_async_queue_new_full ((GDestroyNotify) gst_buffer_unref);
 
   src_tmpl = gst_element_class_get_pad_template (eclass, "src");
