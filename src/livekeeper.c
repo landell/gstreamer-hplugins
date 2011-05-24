@@ -64,7 +64,19 @@ hc_live_keeper_loop (GstPad *pad)
 {
   HcLiveKeeper *keeper = HC_LIVE_KEEPER (GST_OBJECT_PARENT (pad));
   GstBuffer *buf = NULL;
-  buf = g_async_queue_try_pop (keeper->queue);
+  GTimeVal tv;
+  if (keeper->lastbuf)
+    {
+      gint64 timeout;
+      g_get_current_time (&tv);
+      timeout = GST_BUFFER_DURATION (keeper->lastbuf) / GST_USECOND;
+      g_time_val_add (&tv, timeout + 1);
+      buf = g_async_queue_timed_pop (keeper->queue, &tv);
+    }
+  else
+    {
+      buf = g_async_queue_pop (keeper->queue);
+    }
   if (buf)
     {
       gst_buffer_replace (&keeper->lastbuf, buf);
