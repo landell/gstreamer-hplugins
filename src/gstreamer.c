@@ -20,6 +20,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include "livekeeper.h"
 
 extern GType hcv_image_overlay_get_type (void);
 #define HCV_TYPE_IMAGE_OVERLAY (hcv_image_overlay_get_type ())
@@ -29,6 +30,7 @@ plugin_init (GstPlugin *plugin)
 {
   gboolean res;
   res = gst_element_register (plugin, "cairoimageoverlay", GST_RANK_NONE, HCV_TYPE_IMAGE_OVERLAY);
+  res &= gst_element_register (plugin, "livekeeper", GST_RANK_NONE, HC_TYPE_LIVE_KEEPER);
   return res;
 }
 
